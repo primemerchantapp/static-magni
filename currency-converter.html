@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Currency Converter - Magnetar</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <a href="apps.html" class="back-button">
+                <span class="material-icons">arrow_back</span>
+            </a>
+            <h1>Currency Converter</h1>
+            <div class="header-actions">
+                <span class="material-icons" id="historyBtn">history</span>
+            </div>
+        </header>
+
+        <main class="app-content">
+            <div class="currency-converter-container">
+                <div class="currency-card">
+                    <div class="input-group">
+                        <label for="amount">Amount</label>
+                        <input type="number" id="amount" placeholder="Enter amount" value="1">
+                    </div>
+                    
+                    <div class="currency-selectors">
+                        <div class="input-group">
+                            <label for="from-currency">From</label>
+                            <select id="from-currency"></select>
+                        </div>
+                        
+                        <button id="swap-btn" class="icon-button">
+                            <span class="material-icons">swap_horiz</span>
+                        </button>
+                        
+                        <div class="input-group">
+                            <label for="to-currency">To</label>
+                            <select id="to-currency"></select>
+                        </div>
+                    </div>
+                    
+                    <button id="convert-btn" class="primary-button">
+                        <span class="material-icons">currency_exchange</span>
+                        Convert
+                    </button>
+                    
+                    <div id="result" class="result-container">
+                        <div class="result-amount">1 USD = <span id="exchange-rate">0.00</span> EUR</div>
+                        <div class="converted-amount"><span id="converted-value">0.00</span></div>
+                        <div class="last-updated">Last updated: <span id="last-updated">-</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="history-panel" class="history-panel">
+                <div class="history-header">
+                    <h2>History</h2>
+                    <button id="close-history" class="icon-button">
+                        <span class="material-icons">close</span>
+                    </button>
+                </div>
+                <div id="history-list" class="history-list"></div>
+            </div>
+        </main>
+
+        <nav class="bottom-nav">
+            <a href="index.html" class="nav-item">
+                <span class="material-icons">home</span>
+                <span>Home</span>
+            </a>
+            <a href="apps.html" class="nav-item active">
+                <span class="material-icons">apps</span>
+                <span>Apps</span>
+            </a>
+            <a href="wallet.html" class="nav-item">
+                <span class="material-icons">account_balance_wallet</span>
+                <span>Wallet</span>
+            </a>
+            <a href="settings.html" class="nav-item">
+                <span class="material-icons">settings</span>
+                <span>Settings</span>
+            </a>
+        </nav>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+
+            // Currency converter functionality
+            const amountInput = document.getElementById('amount');
+            const fromCurrency = document.getElementById('from-currency');
+            const toCurrency = document.getElementById('to-currency');
+            const swapBtn = document.getElementById('swap-btn');
+            const convertBtn = document.getElementById('convert-btn');
+            const exchangeRate = document.getElementById('exchange-rate');
+            const convertedValue = document.getElementById('converted-value');
+            const lastUpdated = document.getElementById('last-updated');
+            const historyBtn = document.getElementById('historyBtn');
+            const historyPanel = document.getElementById('history-panel');
+            const closeHistory = document.getElementById('close-history');
+            const historyList = document.getElementById('history-list');
+
+            // API endpoint for currency rates
+            const API_URL = 'https://api.exchangerate-api.com/v4/latest/';
+            
+            // Currency list
+            const currencies = [
+                { code: 'USD', name: 'US Dollar' },
+                { code: 'EUR', name: 'Euro' },
+                { code: 'GBP', name: 'British Pound' },
+                { code: 'JPY', name: 'Japanese Yen' },
+                { code: 'AUD', name: 'Australian Dollar' },
+                { code: 'CAD', name: 'Canadian Dollar' },
+                { code: 'CHF', name: 'Swiss Franc' },
+                { code: 'CNY', name: 'Chinese Yuan' },
+                { code: 'INR', name: 'Indian Rupee' },
+                { code: 'BRL', name: 'Brazilian Real' },
+                { code: 'RUB', name: 'Russian Ruble' },
+                { code: 'KRW', name: 'South Korean Won' },
+                { code: 'SGD', name: 'Singapore Dollar' },
+                { code: 'NZD', name: 'New Zealand Dollar' },
+                { code: 'MXN', name: 'Mexican Peso' }
+            ];
+            
+            // Populate currency dropdowns
+            function populateCurrencyDropdowns() {
+                currencies.forEach(currency => {
+                    const fromOption = document.createElement('option');
+                    fromOption.value = currency.code;
+                    fromOption.textContent = `${currency.code} - ${currency.name}`;
+                    fromCurrency.appendChild(fromOption);
+                    
+                    const toOption = document.createElement('option');
+                    toOption.value = currency.code;
+                    toOption.textContent = `${currency.code} - ${currency.name}`;
+                    toCurrency.appendChild(toOption);
+                });
+                
+                // Set default values
+                fromCurrency.value = 'USD';
+                toCurrency.value = 'EUR';
+            }
+            
+            populateCurrencyDropdowns();
+            
+            // Fetch exchange rates
+            async function fetchExchangeRate() {
+                try {
+                    const from = fromCurrency.value;
+                    const to = toCurrency.value;
+                    
+                    // Show loading state
+                    exchangeRate.textContent = 'Loading...';
+                    convertedValue.textContent = 'Loading...';
+                    
+                    const response = await fetch(`${API_URL}${from}`);
+                    const data = await response.json();
+                    
+                    if (data && data.rates) {
+                        const rate = data.rates[to];
+                        const amount = parseFloat(amountInput.value) || 0;
+                        const converted = (amount * rate).toFixed(2);
+                        
+                        // Update UI
+                        exchangeRate.textContent = rate.toFixed(4);
+                        convertedValue.textContent = `${converted} ${to}`;
+                        lastUpdated.textContent = new Date().toLocaleString();
+                        
+                    } else {
+                        throw new Error('Failed to fetch exchange rates');
+                    }
+                } catch (error) {
+                    console.error('Error fetching exchange rates:', error);
+                    exchangeRate.textContent = 'Error';
+                    convertedValue.textContent = 'Failed to convert';
+                }
+            }
+            
+            // Convert button click
+            convertBtn.addEventListener('click', fetchExchangeRate);
+            
+            // Swap currencies
+            swapBtn.addEventListener('click', () => {
+                const temp = fromCurrency.value;
+                fromCurrency.value = toCurrency.value;
+                toCurrency.value = temp;
+            });
+            
+            // History functionality
+            historyBtn.addEventListener('click', () => {
+                historyPanel.classList.add('active');
+                loadHistory();
+            });
+            
+            closeHistory.addEventListener('click', () => {
+                historyPanel.classList.remove('active');
+            });
+            
+            // Load history from local storage
+            function loadHistory() {
+                let history = JSON.parse(localStorage.getItem('currencyHistory') || '[]');
+                historyList.innerHTML = '';
+
+                if (history.length === 0) {
+                    historyList.innerHTML = '<div class="no-history">No history found</div>';
+                    return;
+                }
+
+                history.forEach((item, index) => {
+                    const historyItem = document.createElement('div');
+                    historyItem.className = 'history-item';
+                    historyItem.innerHTML = `
+                        <div class="history-text">
+                            ${item.amount} ${item.fromCurrency} = ${item.convertedAmount} ${item.toCurrency}
+                        </div>
+                        <div class="history-details">
+                            <span>Rate: ${item.rate}</span>
+                            <span>Date: ${item.date}</span>
+                        </div>
+                        <div class="history-actions">
+                            <button class="use-history-btn" data-index="${index}">
+                                <span class="material-icons">refresh</span>
+                            </button>
+                            <button class="delete-history-btn" data-index="${index}">
+                                <span class="material-icons">delete</span>
+                            </button>
+                        </div>
+                    `;
+                    historyList.appendChild(historyItem);
+
+                    historyItem.querySelector('.use-history-btn').addEventListener('click', () => {
+                        amountInput.value = item.amount;
+                        fromCurrency.value = item.fromCurrency;
+                        toCurrency.value = item.toCurrency;
+                        historyPanel.classList.remove('active');
+                        fetchExchangeRate();
+                    });
+
+                    historyItem.querySelector('.delete-history-btn').addEventListener('click', () => {
+                        history.splice(index, 1);
+                        localStorage.setItem('currencyHistory', JSON.stringify(history));
+                        loadHistory();
+                    });
+                });
+            }
+
+            // Save to history in local storage
+            function saveToHistory(from, to, amount, converted, rate) {
+                let history = JSON.parse(localStorage.getItem('currencyHistory') || '[]');
+                const newItem = {
+                    fromCurrency: from,
+                    toCurrency: to,
+                    amount: amount,
+                    convertedAmount: converted,
+                    rate: rate,
+                    date: new Date().toLocaleString()
+                };
+                history.push(newItem);
+                localStorage.setItem('currencyHistory', JSON.stringify(history));
+            }
+            
+            // Initial conversion
+            fetchExchangeRate();
+        });
+    </script>
+</body>
+</html>

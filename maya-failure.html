@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Magnetar - Payment Failed</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#C00000">
+  <meta name="description" content="Magnetar - Payment Failed">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Magnetar">
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --magnetar-red: #C00000;
+      --text-dark: #1A1A1A;
+    }
+    
+    body {
+      font-family: 'Open Sans', sans-serif;
+      color: var(--text-dark);
+      background-color: #f7f7f7;
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior: none;
+    }
+    
+    h1, h2, h3, h4, h5, h6, .heading {
+      font-family: 'Roboto', sans-serif;
+    }
+    
+    .btn-primary {
+      background-color: var(--magnetar-red);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    .btn-primary:hover, .btn-primary:active {
+      background-color: #A00000;
+      transform: translateY(-1px);
+    }
+    
+    .btn-primary:active {
+      transform: translateY(1px);
+    }
+    
+    .card {
+      background-color: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    /* Page transition animation */
+    .page-transition {
+      animation: fadeIn 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Error animation */
+    .error-x {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto;
+      position: relative;
+    }
+    
+    .error-x .x-icon {
+      width: 80px;
+      height: 80px;
+      position: relative;
+      border-radius: 50%;
+      box-sizing: content-box;
+      border: 4px solid #FF5252;
+    }
+    
+    .error-x .x-icon .icon-line {
+      height: 5px;
+      background-color: #FF5252;
+      display: block;
+      border-radius: 2px;
+      position: absolute;
+      z-index: 10;
+    }
+    
+    .error-x .x-icon .icon-line.line-left {
+      width: 40px;
+      top: 37px;
+      left: 20px;
+      transform: rotate(45deg);
+      animation: icon-line-left 0.75s;
+    }
+    
+    .error-x .x-icon .icon-line.line-right {
+      width: 40px;
+      top: 37px;
+      right: 20px;
+      transform: rotate(-45deg);
+      animation: icon-line-right 0.75s;
+    }
+    
+    .error-x .x-icon .icon-circle {
+      top: -4px;
+      left: -4px;
+      z-index: 10;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      position: absolute;
+      box-sizing: content-box;
+      border: 4px solid rgba(255, 82, 82, 0.5);
+    }
+    
+    @keyframes icon-line-left {
+      0% {
+        width: 0;
+        left: 40px;
+        top: 37px;
+      }
+      65% {
+        width: 0;
+        left: 40px;
+        top: 37px;
+      }
+      100% {
+        width: 40px;
+        left: 20px;
+        top: 37px;
+      }
+    }
+    
+    @keyframes icon-line-right {
+      0% {
+        width: 0;
+        right: 40px;
+        top: 37px;
+      }
+      65% {
+        width: 0;
+        right: 40px;
+        top: 37px;
+      }
+      100% {
+        width: 40px;
+        right: 20px;
+        top: 37px;
+      }
+    }
+    
+    /* Prevent zoom */
+    * {
+      touch-action: manipulation;
+    }
+    
+    html, body {
+      overflow-x: hidden;
+      max-width: 100%;
+      touch-action: pan-y;
+    }
+  </style>
+  <script>
+    // Add page transition animation
+    document.addEventListener('DOMContentLoaded', function() {
+      document.body.classList.add('page-transition');
+    });
+    
+    // Prevent zoom on double-tap
+    document.addEventListener('touchstart', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Prevent zoom on pinch
+    document.addEventListener('touchmove', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Prevent zoom on double-tap
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(event) {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, { passive: false });
+    
+    // Redirect to add-money page after 5 seconds
+    setTimeout(function() {
+      window.location.href = 'add-money.html';
+    }, 5000);
+  </script>
+</head>
+
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
+  <div class="card p-8 w-full max-w-md text-center">
+    <div class="error-x mb-6">
+      <div class="x-icon">
+        <span class="icon-line line-left"></span>
+        <span class="icon-line line-right"></span>
+        <span class="icon-circle"></span>
+      </div>
+    </div>
+    
+    <h1 class="text-2xl font-bold text-red-600 mb-2">Payment Failed</h1>
+    <p class="text-gray-600 mb-6">Your payment could not be processed. Please try again.</p>
+    
+    <div class="bg-gray-50 p-4 rounded-lg mb-6">
+      <p class="text-gray-600 mb-2">Possible reasons:</p>
+      <ul class="text-sm text-gray-500 list-disc list-inside text-left">
+        <li>Insufficient funds in your account</li>
+        <li>Payment was declined by your bank</li>
+        <li>Connection issue during payment processing</li>
+        <li>Incorrect payment details</li>
+      </ul>
+    </div>
+    
+    <p class="text-sm text-gray-500 mb-6">You will be redirected to the add money page in 5 seconds...</p>
+    
+    <a href="add-money.html" class="block w-full py-3 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors">
+      Try Again
+    </a>
+  </div>
+</body>
+</html>

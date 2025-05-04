@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Magnetar - QR Scanner</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#C00000">
+  <meta name="description" content="Magnetar - QR Scanner">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Magnetar">
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <style>
+    :root {
+      --magnetar-red: #C00000;
+      --text-dark: #1A1A1A;
+    }
+    
+    body {
+      font-family: 'Open Sans', sans-serif;
+      color: var(--text-dark);
+      background-color: #f7f7f7;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    h1, h2, h3, h4, h5, h6, .heading {
+      font-family: 'Roboto', sans-serif;
+    }
+    
+    .btn-primary {
+      background-color: var(--magnetar-red);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    .btn-primary:hover, .btn-primary:active {
+      background-color: #A00000;
+      transform: translateY(-1px);
+    }
+    
+    .btn-primary:active {
+      transform: translateY(1px);
+    }
+    
+    /* Custom input styles */
+    input, textarea, select {
+      background-color: #f5f5f5 !important;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    input:focus, textarea:focus, select:focus {
+      outline: none !important;
+      background-color: #f0f0f0 !important;
+      box-shadow: 0 0 0 2px rgba(192, 0, 0, 0.2) !important;
+    }
+    
+    .card {
+      background-color: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    /* QR Scanner frame */
+    .scanner-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .scanner-frame {
+      width: 250px;
+      height: 250px;
+      border: 2px solid white;
+      border-radius: 1rem;
+      box-shadow: 0 0 0 5000px rgba(0, 0, 0, 0.5);
+    }
+    
+    /* Page transition animation */
+    .page-transition {
+      animation: fadeIn 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Loading animation */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    
+    .loading-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 3px solid rgba(192, 0, 0, 0.1);
+      border-top-color: var(--magnetar-red);
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Prevent zoom */
+    * {
+      touch-action: manipulation;
+    }
+  </style>
+  <script>
+    // Add page transition animation
+    document.addEventListener('DOMContentLoaded', function() {
+      document.body.classList.add('page-transition');
+      
+      // Initialize QR scanner
+      initQRScanner();
+    });
+    
+    function initQRScanner() {
+      const html5QrCode = new Html5Qrcode("qr-reader");
+      const qrContainer = document.getElementById('qr-container');
+      
+      html5QrCode.start(
+        { facingMode: "environment" },
+        {
+          fps: 10,
+          qrbox: 250
+        },
+        onScanSuccess,
+        onScanFailure
+      );
+      
+      function onScanSuccess(decodedText, decodedResult) {
+        // Handle the scanned code
+        document.getElementById('scan-result').textContent = decodedText;
+        document.getElementById('result-container').classList.remove('hidden');
+        
+        // Stop scanning
+        html5QrCode.stop();
+        
+        // Handle different QR code types
+        if (decodedText.startsWith('http')) {
+          document.getElementById('result-type').textContent = 'URL Detected';
+          document.getElementById('open-link-btn').classList.remove('hidden');
+          document.getElementById('open-link-btn').onclick = function() {
+            window.open(decodedText, '_blank');
+          };
+        } else if (decodedText.startsWith('BEGIN:VCARD')) {
+          document.getElementById('result-type').textContent = 'Contact Information';
+          // Extract contact info
+          const name = decodedText.match(/N:([^\n]+)/)?.[1] || '';
+          const phone = decodedText.match(/TEL:([^\n]+)/)?.[1] || '';
+          const email = decodedText.match(/EMAIL:([^\n]+)/)?.[1] || '';
+          
+          document.getElementById('scan-result').innerHTML = `
+            <div class="space-y-1">
+              <p><strong>Name:</strong> ${name}</p>
+              <p><strong>Phone:</strong> ${phone}</p>
+              <p><strong>Email:</strong> ${email}</p>
+            </div>
+          `;
+        } else if (decodedText.startsWith('WIFI:')) {
+          document.getElementById('result-type').textContent = 'WiFi Network';
+          // Extract WiFi info
+          const ssid = decodedText.match(/S:([^;]+)/)?.[1] || '';
+          const password = decodedText.match(/P:([^;]+)/)?.[1] || '';
+          const encType = decodedText.match(/T:([^;]+)/)?.[1] || '';
+          
+          document.getElementById('scan-result').innerHTML = `
+            <div class="space-y-1">
+              <p><strong>Network:</strong> ${ssid}</p>
+              <p><strong>Password:</strong> ${password}</p>
+              <p><strong>Encryption:</strong> ${encType}</p>
+            </div>
+          `;
+        }
+      }
+      
+      function onScanFailure(error) {
+        // Handle scan failure, ignore frequent failures as the scanner continuously tries
+        console.warn(`QR scan failed: ${error}`);
+      }
+      
+      // Restart scanning
+      document.getElementById('restart-scan-btn').addEventListener('click', function() {
+        document.getElementById('result-container').classList.add('hidden');
+        document.getElementById('open-link-btn').classList.add('hidden');
+        
+        html5QrCode.start(
+          { facingMode: "environment" },
+          {
+            fps: 10,
+            qrbox: 250
+          },
+          onScanSuccess,
+          onScanFailure
+        );
+      });
+    }
+    
+    // Prevent zoom on double-tap
+    document.addEventListener('touchstart', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Prevent zoom on pinch
+    document.addEventListener('touchmove', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Prevent zoom on double-tap
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(event) {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, { passive: false });
+  </script>
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+  <!-- Loading overlay -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="loading-spinner"></div>
+  </div>
+  
+  <!-- Header -->
+  <header class="bg-white shadow-sm p-4 flex items-center justify-between sticky top-0 z-10">
+    <a href="apps.html" class="flex items-center">
+      <span class="material-icons text-gray-600 mr-2">arrow_back</span>
+      <h1 class="text-xl font-bold">QR Scanner</h1>
+    </a>
+    <div class="flex space-x-2">
+      <button id="flash-button" class="p-2 rounded-full hover:bg-gray-100">
+        <span class="material-icons text-gray-600">flash_on</span>
+      </button>
+    </div>
+  </header>
+  
+  <main class="container mx-auto px-4 py-6 pb-20 max-w-lg">
+    <!-- QR Scanner -->
+    <div id="qr-container" class="relative rounded-lg overflow-hidden mb-6" style="height: 350px">
+      <div id="qr-reader" class="w-full h-full"></div>
+      <div class="scanner-overlay">
+        <div class="scanner-frame"></div>
+      </div>
+    </div>
+    
+    <!-- Scan Result -->
+    <div id="result-container" class="card p-6 hidden mb-6">
+      <h3 id="result-type" class="font-bold text-lg mb-2">Scan Result</h3>
+      <div id="scan-result" class="bg-gray-50 p-4 rounded-lg break-all"></div>
+      
+      <div class="flex space-x-4 mt-4">
+        <button id="open-link-btn" class="flex-1 btn-primary text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center hidden">
+          <span class="material-icons mr-2">open_in_new</span>
+          Open Link
+        </button>
+        <button id="restart-scan-btn" class="flex-1 bg-gray-100 text-gray-800 font-medium py-3 px-4 rounded-lg flex items-center justify-center">
+          <span class="material-icons mr-2">qr_code_scanner</span>
+          Scan Again
+        </button>
+      </div>
+    </div>
+    
+    <!-- Instructions -->
+    <div class="bg-blue-50 p-4 rounded-lg">
+      <h3 class="font-medium text-blue-700 mb-2">How to use</h3>
+      <ul class="text-sm text-blue-600 space-y-2">
+        <li class="flex items-start">
+          <span class="material-icons text-blue-500 mr-2 text-sm">check_circle</span>
+          <span>Point your camera at a QR code</span>
+        </li>
+        <li class="flex items-start">
+          <span class="material-icons text-blue-500 mr-2 text-sm">check_circle</span>
+          <span>Hold steady until the QR code is detected</span>
+        </li>
+        <li class="flex items-start">
+          <span class="material-icons text-blue-500 mr-2 text-sm">check_circle</span>
+          <span>The app will automatically detect URLs, WiFi networks, and contact information</span>
+        </li>
+      </ul>
+    </div>
+  </main>
+  
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
+          console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        }, function(err) {
+          console.log('ServiceWorker registration failed: ', err);
+        });
+      });
+    }
+  </script>
+</body>
+</html>

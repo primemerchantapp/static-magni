@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text to Speech - Magnetar</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <a href="apps.html" class="back-button">
+                <span class="material-icons">arrow_back</span>
+            </a>
+            <h1>Text to Speech</h1>
+            <div class="header-actions">
+                <span class="material-icons" id="historyBtn">history</span>
+            </div>
+        </header>
+
+        <main class="app-content">
+            <div class="text-to-speech-container">
+                <div class="input-group">
+                    <label for="text-input">Enter Text</label>
+                    <textarea id="text-input" placeholder="Type something to convert to speech..."></textarea>
+                </div>
+                
+                <div class="voice-controls">
+                    <div class="input-group">
+                        <label for="voice-select">Select Voice</label>
+                        <select id="voice-select"></select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="rate-input">Rate</label>
+                        <input type="range" id="rate-input" min="0.5" max="2" value="1" step="0.1">
+                        <span id="rate-value">1</span>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="pitch-input">Pitch</label>
+                        <input type="range" id="pitch-input" min="0" max="2" value="1" step="0.1">
+                        <span id="pitch-value">1</span>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button id="speak-btn" class="primary-button">
+                        <span class="material-icons">record_voice_over</span>
+                        Speak
+                    </button>
+                    <button id="pause-btn" class="secondary-button" disabled>
+                        <span class="material-icons">pause</span>
+                        Pause
+                    </button>
+                    <button id="resume-btn" class="secondary-button" disabled>
+                        <span class="material-icons">play_arrow</span>
+                        Resume
+                    </button>
+                    <button id="stop-btn" class="secondary-button" disabled>
+                        <span class="material-icons">stop</span>
+                        Stop
+                    </button>
+                </div>
+            </div>
+
+            <div id="history-panel" class="history-panel">
+                <div class="history-header">
+                    <h2>History</h2>
+                    <button id="close-history" class="icon-button">
+                        <span class="material-icons">close</span>
+                    </button>
+                </div>
+                <div id="history-list" class="history-list"></div>
+            </div>
+        </main>
+
+        <nav class="bottom-nav">
+            <a href="index.html" class="nav-item">
+                <span class="material-icons">home</span>
+                <span>Home</span>
+            </a>
+            <a href="apps.html" class="nav-item active">
+                <span class="material-icons">apps</span>
+                <span>Apps</span>
+            </a>
+            <a href="wallet.html" class="nav-item">
+                <span class="material-icons">account_balance_wallet</span>
+                <span>Wallet</span>
+            </a>
+            <a href="settings.html" class="nav-item">
+                <span class="material-icons">settings</span>
+                <span>Settings</span>
+            </a>
+        </nav>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Text to Speech functionality
+            const textInput = document.getElementById('text-input');
+            const voiceSelect = document.getElementById('voice-select');
+            const rateInput = document.getElementById('rate-input');
+            const rateValue = document.getElementById('rate-value');
+            const pitchInput = document.getElementById('pitch-input');
+            const pitchValue = document.getElementById('pitch-value');
+            const speakBtn = document.getElementById('speak-btn');
+            const pauseBtn = document.getElementById('pause-btn');
+            const resumeBtn = document.getElementById('resume-btn');
+            const stopBtn = document.getElementById('stop-btn');
+            const historyBtn = document.getElementById('historyBtn');
+            const historyPanel = document.getElementById('history-panel');
+            const closeHistory = document.getElementById('close-history');
+            const historyList = document.getElementById('history-list');
+
+            let voices = [];
+            let currentUtterance = null;
+            const synth = window.speechSynthesis;
+
+            // Populate voice list
+            function populateVoiceList() {
+                voices = synth.getVoices();
+                voiceSelect.innerHTML = '';
+                
+                voices.forEach(voice => {
+                    const option = document.createElement('option');
+                    option.textContent = `${voice.name} (${voice.lang})`;
+                    option.setAttribute('data-lang', voice.lang);
+                    option.setAttribute('data-name', voice.name);
+                    voiceSelect.appendChild(option);
+                });
+            }
+
+            if (synth.onvoiceschanged !== undefined) {
+                synth.onvoiceschanged = populateVoiceList;
+            }
+
+            // Initialize voices
+            populateVoiceList();
+            
+            // Update rate and pitch values
+            rateInput.addEventListener('input', () => {
+                rateValue.textContent = rateInput.value;
+            });
+            
+            pitchInput.addEventListener('input', () => {
+                pitchValue.textContent = pitchInput.value;
+            });
+            
+            // Speak function
+            speakBtn.addEventListener('click', () => {
+                if (synth.speaking) {
+                    synth.cancel();
+                }
+                
+                if (textInput.value !== '') {
+                    const utterance = new SpeechSynthesisUtterance(textInput.value);
+                    
+                    // Set voice
+                    const selectedVoice = voiceSelect.selectedOptions[0].getAttribute('data-name');
+                    const voice = voices.find(v => v.name === selectedVoice);
+                    if (voice) utterance.voice = voice;
+                    
+                    // Set rate and pitch
+                    utterance.rate = parseFloat(rateInput.value);
+                    utterance.pitch = parseFloat(pitchInput.value);
+                    
+                    // Event handlers
+                    utterance.onstart = () => {
+                        pauseBtn.disabled = false;
+                        stopBtn.disabled = false;
+                        speakBtn.disabled = true;
+                    };
+                    
+                    utterance.onend = () => {
+                        resetButtons();
+                    };
+                    
+                    utterance.onerror = () => {
+                        resetButtons();
+                        alert('An error occurred while speaking.');
+                    };
+                    
+                    // Speak
+                    currentUtterance = utterance;
+                    synth.speak(utterance);
+                }
+            });
+            
+            // Pause speech
+            pauseBtn.addEventListener('click', () => {
+                if (synth.speaking) {
+                    synth.pause();
+                    pauseBtn.disabled = true;
+                    resumeBtn.disabled = false;
+                }
+            });
+            
+            // Resume speech
+            resumeBtn.addEventListener('click', () => {
+                if (synth.paused) {
+                    synth.resume();
+                    pauseBtn.disabled = false;
+                    resumeBtn.disabled = true;
+                }
+            });
+            
+            // Stop speech
+            stopBtn.addEventListener('click', () => {
+                if (synth.speaking) {
+                    synth.cancel();
+                    resetButtons();
+                }
+            });
+            
+            // Reset button states
+            function resetButtons() {
+                pauseBtn.disabled = true;
+                resumeBtn.disabled = true;
+                stopBtn.disabled = true;
+                speakBtn.disabled = false;
+            }
+            
+            // History functionality
+            historyBtn.addEventListener('click', () => {
+                historyPanel.classList.add('active');
+                loadHistory();
+            });
+            
+            closeHistory.addEventListener('click', () => {
+                historyPanel.classList.remove('active');
+            });
+            
+            // Save to history in Firebase
+            function saveToHistory(text, voice, rate, pitch) {
+                // Not saving history
+            }
+            
+            // Load history from Firebase
+            function loadHistory() {
+                historyList.innerHTML = '<div class="no-history">History is disabled.</div>';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Magnetar - Wallet</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#C00000">
+  <meta name="description" content="Magnetar - Wallet & Transactions">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Magnetar">
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --magnetar-red: #C00000;
+      --text-dark: #1A1A1A;
+    }
+    
+    body {
+      font-family: 'Open Sans', sans-serif;
+      color: var(--text-dark);
+      background-color: #f5f5f5;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    h1, h2, h3, h4, h5, h6, .heading {
+      font-family: 'Roboto', sans-serif;
+    }
+    
+    .btn-primary {
+      background-color: var(--magnetar-red);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    .btn-primary:hover, .btn-primary:active {
+      background-color: #A00000;
+      transform: translateY(-1px);
+    }
+    
+    .btn-primary:active {
+      transform: translateY(1px);
+    }
+    
+    /* Loading animation */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    
+    .loading-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 3px solid rgba(192, 0, 0, 0.1);
+      border-top-color: var(--magnetar-red);
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Transaction items animation */
+    .transaction-item {
+      transition: all 0.3s ease;
+    }
+    
+    .transaction-item:hover {
+      transform: translateX(5px);
+      background-color: rgba(245, 245, 245, 0.7);
+    }
+
+    /* Bottom nav hover animation */
+    .nav-item {
+      transition: all 0.3s ease;
+    }
+    
+    .nav-item:hover {
+      transform: translateY(-5px);
+    }
+
+    /* Center button styles */
+    .center-button {
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      transform: translateY(-10px);
+      transition: all 0.3s ease;
+    }
+
+    .center-button:hover {
+      transform: translateY(-15px);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+    }
+
+    /* Center button - invisible background */
+    .center-button-nav {
+      background-color: transparent !important; /* Make background invisible */
+      box-shadow: none; /* Remove shadow if any */
+      transform: translateY(-10px); /* Keep the translate Y */
+      transition: all 0.3s ease;
+    }
+
+    .center-button-nav:hover {
+      transform: translateY(-15px);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25); /* Keep shadow on hover if desired */
+    }
+
+    /* Header Logo and Text Styling */
+    .header-logo-container {
+      display: flex;
+      align-items: center;
+    }
+
+    .header-logo-text {
+      margin-left: 8px; /* Space between logo and text */
+    }
+
+    /* Header Icons Right Alignment */
+    .header-icons-right {
+      position: absolute;
+      right: 4px;
+      display: flex; /* To align icons horizontally */
+      gap: 16px; /* Space between icons */
+      align-items: center; /* Vertically align icons */
+    }
+
+    /* Increased Header Height */
+    header {
+      padding-top: 32px; /* Increased vertical padding (original p-4 = 16px, doubled = 32px) */
+      padding-bottom: 32px; /* Increased vertical padding */
+    }
+
+    /* Space after messenger icon */
+    .header-messenger-icon {
+      margin-right: 0px; /* Adjust as needed for more or less space */
+    }
+  </style>
+  <script>
+    // Prevent zoom on double-tap
+    document.addEventListener('touchstart', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Prevent zoom on pinch
+    document.addEventListener('touchmove', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Prevent zoom on double-tap
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(event) {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, { passive: false });
+  </script>
+</head>
+
+<body class="bg-gray-100 flex flex-col mx-auto min-h-screen max-w-sm w-full">
+  <!-- Loading overlay -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <!-- Header -->
+  <header class="relative bg-white text-gray-800 text-lg font-semibold flex items-center justify-center sticky top-0 z-50 shadow-sm">
+    <!-- Header Logo and Text (Left) -->
+    <div class="absolute left-4 header-logo-container">
+      <div class="w-8 h-8 bg-no-repeat bg-center bg-contain"
+          style="background-image: url('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20250127_191600_0000-6AwFlDvh6mQeKcJJwH3Jlyef5Qpeic.png')"></div>
+      <span class="header-logo-text">MAGNETAR</span>
+    </div>
+    <!-- Center Title (Hidden, if not needed) -->
+    <div class="hidden">
+      <!-- If you still need a center title, put it here -->
+    </div>
+    <!-- Header Icons (Right) -->
+    <div class="header-icons-right">
+      <div class="cursor-pointer" onclick="handleNotificationClick()">
+        <span class="material-icons text-2xl text-gray-700">notifications</span>
+        <span id="notificationBadge"
+              class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 hidden">0</span>
+      </div>
+      <div class="cursor-pointer header-messenger-icon" onclick="handleMessageClick()">
+        <span class="material-icons text-2xl text-gray-700">email</span>
+        <span id="messageBadge"
+              class="absolute -top-2 -right-2 bg-blue-500 text-white text-xs rounded-full px-1.5 py-0.5 hidden">0</span>
+      </div>
+      <div class="mr-4"></div> <!-- Added extra spacing element -->
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col items-center p-4 w-full overflow-y-auto pb-24 space-y-4">
+    <!-- Wallet Card -->
+    <div class="bg-white rounded-lg p-4 shadow w-full">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h3 class="text-sm text-gray-500">Wallet Balance</h3>
+          <div class="flex items-center space-x-2">
+            <p id="balanceAmount" class="text-2xl font-bold">₱0.00</p>
+            <button id="toggleBalanceBtn" class="text-gray-500">
+              <span class="material-icons">visibility</span>
+            </button>
+          </div>
+          <p id="userMemberId" class="text-xs text-gray-500 mt-1">Member ID: Loading...</p>
+        </div>
+        <div class="flex flex-col space-y-2">
+          <button id="addMoneyBtn" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center">
+            <span class="material-icons mr-1 text-sm">add</span>
+            Add Money
+          </button>
+          <button id="withdrawBtn" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg text-sm font-medium flex items-center">
+            <span class="material-icons mr-1 text-sm">arrow_downward</span>
+            Withdraw
+          </button>
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-3 gap-3 mt-4">
+        <button class="bg-gray-100 p-2 rounded-lg flex flex-col items-center">
+          <span class="material-icons text-gray-700">send</span>
+          <span class="text-xs mt-1">Send</span>
+        </button>
+        <button class="bg-gray-100 p-2 rounded-lg flex flex-col items-center">
+          <span class="material-icons text-gray-700">qr_code_scanner</span>
+          <span class="text-xs mt-1">Scan</span>
+        </button>
+        <button class="bg-gray-100 p-2 rounded-lg flex flex-col items-center">
+          <span class="material-icons text-gray-700">history</span>
+          <span class="text-xs mt-1">History</span>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Quick Transfer -->
+    <div class="bg-white rounded-lg p-4 shadow w-full">
+      <h3 class="font-medium mb-3">Quick Transfer</h3>
+      <div class="flex space-x-3 overflow-x-auto py-2">
+        <div class="flex flex-col items-center">
+          <div class="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
+            <span class="material-icons">add</span>
+          </div>
+          <span class="text-xs mt-1">New</span>
+        </div>
+        <div class="flex flex-col items-center">
+          <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+            <span class="material-icons text-blue-600">person</span>
+          </div>
+          <span class="text-xs mt-1">John</span>
+        </div>
+        <div class="flex flex-col items-center">
+          <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+            <span class="material-icons text-green-600">person</span>
+          </div>
+          <span class="text-xs mt-1">Sarah</span>
+        </div>
+        <div class="flex flex-col items-center">
+          <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
+            <span class="material-icons text-purple-600">person</span>
+          </div>
+          <span class="text-xs mt-1">Mike</span>
+        </div>
+        <div class="flex flex-col items-center">
+          <div class="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center">
+            <span class="material-icons text-yellow-600">person</span>
+          </div>
+          <span class="text-xs mt-1">Lisa</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Recent Transactions -->
+    <div class="bg-white rounded-lg p-4 shadow w-full">
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="font-medium">Recent Transactions</h3>
+        <a href="transaction-history.html" class="text-red-600 text-sm font-medium">See All</a>
+      </div>
+      
+      <div id="transactionsContainer" class="space-y-3">
+        <!-- Transactions will be loaded here -->
+        <div class="transaction-item p-2 rounded-lg flex items-center justify-between">
+          <div class="flex items-center">
+            <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mr-3">
+              <span class="material-icons text-green-600">arrow_downward</span>
+            </div>
+            <div>
+              <h4 class="font-medium">Received</h4>
+              <p class="text-xs text-gray-500">From: John Doe</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <p class="font-medium text-green-600">+₱500.00</p>
+            <p class="text-xs text-gray-500">Today, 10:30 AM</p>
+          </div>
+        </div>
+        
+        <div class="transaction-item p-2 rounded-lg flex items-center justify-between">
+          <div class="flex items-center">
+            <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center mr-3">
+              <span class="material-icons text-red-600">arrow_upward</span>
+            </div>
+            <div>
+              <h4 class="font-medium">Sent</h4>
+              <p class="text-xs text-gray-500">To: Sarah Smith</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <p class="font-medium text-red-600">-₱200.00</p>
+            <p class="text-xs text-gray-500">Yesterday, 3:45 PM</p>
+          </div>
+        </div>
+        
+        <div class="transaction-item p-2 rounded-lg flex items-center justify-between">
+          <div class="flex items-center">
+            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+              <span class="material-icons text-blue-600">credit_card</span>
+            </div>
+            <div>
+              <h4 class="font-medium">Added Money</h4>
+              <p class="text-xs text-gray-500">Via: Debit Card</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <p class="font-medium text-green-600">+₱1,000.00</p>
+            <p class="text-xs text-gray-500">Jan 15, 2:30 PM</p>
+          </div>
+        </div>
+        
+        <div class="transaction-item p-2 rounded-lg flex items-center justify-between">
+          <div class="flex items-center">
+            <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mr-3">
+              <span class="material-icons text-purple-600">shopping_cart</span>
+            </div>
+            <div>
+              <h4 class="font-medium">Purchase</h4>
+              <p class="text-xs text-gray-500">Item: Product Catalog</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <p class="font-medium text-red-600">-₱350.00</p>
+            <p class="text-xs text-gray-500">Jan 12, 9:15 AM</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Bottom Nav -->
+  <div class="bg-white border-t border-gray-300 w-full max-w-sm flex justify-around items-center py-2 fixed bottom-0 left-1/2 transform -translate-x-1/2">
+    <div class="nav-item cursor-pointer" onclick="window.location.href='social.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">people</span>
+    </div>
+    <div class="nav-item cursor-pointer active">
+      <span class="material-icons text-red-600 text-xl" style="font-size: 1.5em">account_balance_wallet</span>
+    </div>
+    <div class="center-button-nav center-button cursor-pointer" onclick="window.location.href='index.html'">
+      <div class="w-12 h-12 rounded-full overflow-hidden bg-transparent flex items-center justify-center shadow-md">
+        <div class="w-8 h-8 bg-contain bg-center bg-no-repeat"
+             style="background-image: url('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20250127_191600_0000-6AwFlDvh6mQeKcJJwH3Jlyef5Qpeic.png')"></div>
+      </div>
+    </div>
+    <div class="nav-item cursor-pointer" onclick="window.location.href='academy.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">school</span>
+    </div>
+    <div class="nav-item cursor-pointer" onclick="window.location.href='settings.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">settings</span>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js";
+    import { 
+      getFirestore, 
+      doc, 
+      getDoc,
+      collection,
+      query,
+      orderBy,
+      limit,
+      getDocs
+    } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js";
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtNedkJo6ikNneZZdrheiWbE3Dn2B8kwQ",
+      authDomain: "ces-project-f8b4e.firebaseapp.com",
+      databaseURL: "https://ces-project-f8b4e-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "ces-project-f8b4e",
+      storageBucket: "ces-project-f8b4e.firebasestorage.app",
+      messagingSenderId: "580767851656",
+      appId: "1:580767851656:web:2c852e7edb81a6decdeb3d",
+      measurementId: "G-K73DSMWBTP"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    
+    // DOM elements
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const balanceAmount = document.getElementById('balanceAmount');
+    const userMemberId = document.getElementById('userMemberId');
+    const toggleBalanceBtn = document.getElementById('toggleBalanceBtn');
+    const addMoneyBtn = document.getElementById('addMoneyBtn');
+    const withdrawBtn = document.getElementById('withdrawBtn');
+    const notificationBadge = document.getElementById('notificationBadge');
+    const messageBadge = document.getElementById('messageBadge');
+    
+    let currentUser = null;
+    let showBalance = true;
+    let currentBalance = 0;
+    
+    // Check authentication state
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        await loadUserData();
+        // Hide loading
+        loadingOverlay.classList.remove('active');
+      } else {
+        // Redirect to login if not authenticated
+        window.location.href = 'email-login.html';
+      }
+    });
+    
+    // Load user data
+    async function loadUserData() {
+      try {
+        const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+        
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          
+          // Set member ID
+          userMemberId.textContent = `Member ID: ${userData.memberId || 'Not set'}`;
+          
+          // Set balance
+          currentBalance = userData.balance || 0;
+          updateBalanceText();
+          
+          // Load recent transactions
+          loadRecentTransactions();
+        }
+      } catch (error) {
+        console.error("Error loading user data:", error);
+      }
+    }
+    
+    // Load recent transactions
+    async function loadRecentTransactions() {
+      try {
+        const transactionsRef = collection(db, "users", currentUser.uid, "transactions");
+        const q = query(transactionsRef, orderBy("timestamp", "desc"), limit(5));
+        
+        const querySnapshot = await getDocs(q);
+        
+        // We can handle display of transactions here if needed
+        // For now, we'll just log them
+        console.log("Recent transactions loaded:", querySnapshot.size);
+      } catch (error) {
+        console.error("Error loading transactions:", error);
+      }
+    }
+    
+    // Update balance text (show/hide)
+    function updateBalanceText() {
+      if (showBalance) {
+        balanceAmount.textContent = `₱${currentBalance.toFixed(2)}`;
+        toggleBalanceBtn.innerHTML = '<span class="material-icons">visibility</span>';
+      } else {
+        balanceAmount.textContent = '₱••••••';
+        toggleBalanceBtn.innerHTML = '<span class="material-icons">visibility_off</span>';
+      }
+    }
+    
+    // Toggle balance visibility
+    toggleBalanceBtn.addEventListener('click', () => {
+      showBalance = !showBalance;
+      updateBalanceText();
+    });
+    
+    // Handle add money button
+    addMoneyBtn.addEventListener('click', () => {
+      window.location.href = 'add-money.html';
+    });
+    
+    // Handle withdraw button
+    withdrawBtn.addEventListener('click', () => {
+      window.location.href = 'withdraw.html';
+    });
+    
+    // Function to update notification badge count
+    function updateNotificationBadge(count) {
+      if (count > 0) {
+        notificationBadge.textContent = count;
+        notificationBadge.classList.remove('hidden');
+      } else {
+        notificationBadge.classList.add('hidden');
+      }
+    }
+    
+    // Function to update message badge count
+    function updateMessageBadge(count) {
+      if (count > 0) {
+        messageBadge.textContent = count;
+        messageBadge.classList.remove('hidden');
+      } else {
+        messageBadge.classList.add('hidden');
+      }
+    }
+    
+    // Handle notification and message clicks
+    function handleNotificationClick() {
+      window.location.href = 'notifications.html';
+    }
+
+    function handleMessageClick() {
+      window.location.href = 'messages.html';
+    }
+
+    // Make these functions globally accessible
+    window.handleNotificationClick = handleNotificationClick;
+    window.handleMessageClick = handleMessageClick;
+  </script>
+</body>
+</html>

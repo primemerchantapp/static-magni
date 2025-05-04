@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App - Magnetar</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="firebase-config.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <a href="apps.html" class="back-button">
+                <span class="material-icons">arrow_back</span>
+            </a>
+            <h1>Weather App</h1>
+            <div class="header-actions">
+                <span class="material-icons" id="historyBtn">history</span>
+            </div>
+        </header>
+
+        <main class="app-content">
+            <div class="weather-container">
+                <div class="search-container">
+                    <div class="input-group">
+                        <input type="text" id="city-input" placeholder="Enter city name">
+                        <button id="search-btn" class="icon-button">
+                            <span class="material-icons">search</span>
+                        </button>
+                        <button id="location-btn" class="icon-button" title="Use current location">
+                            <span class="material-icons">my_location</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="weather-card" class="weather-card hidden">
+                    <div class="weather-header">
+                        <h2 id="city-name">City Name</h2>
+                        <p id="date-time">Date and Time</p>
+                    </div>
+                    
+                    <div class="weather-body">
+                        <div class="weather-icon">
+                            <img id="weather-icon" src="/placeholder.svg" alt="Weather icon">
+                        </div>
+                        
+                        <div class="weather-info">
+                            <div class="temperature">
+                                <span id="temperature">0</span>°C
+                            </div>
+                            <div class="weather-description" id="weather-description">Weather Description</div>
+                        </div>
+                    </div>
+                    
+                    <div class="weather-details">
+                        <div class="detail-item">
+                            <span class="material-icons">thermostat</span>
+                            <div class="detail-info">
+                                <span class="detail-label">Feels Like</span>
+                                <span class="detail-value" id="feels-like">0°C</span>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <span class="material-icons">water_drop</span>
+                            <div class="detail-info">
+                                <span class="detail-label">Humidity</span>
+                                <span class="detail-value" id="humidity">0%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <span class="material-icons">air</span>
+                            <div class="detail-info">
+                                <span class="detail-label">Wind</span>
+                                <span class="detail-value" id="wind-speed">0 km/h</span>
+                            </div>
+                        </div>  id="wind-speed">0 km/h</span>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-item">
+                            <span class="material-icons">visibility</span>
+                            <div class="detail-info">
+                                <span class="detail-label">Visibility</span>
+                                <span class="detail-value" id="visibility">0 km</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button id="save-location-btn" class="secondary-button">
+                        <span class="material-icons">star</span>
+                        Save Location
+                    </button>
+                </div>
+                
+                <div id="error-message" class="error-message hidden">
+                    <span class="material-icons">error</span>
+                    <p>City not found. Please try again.</p>
+                </div>
+                
+                <div id="loading" class="loading hidden">
+                    <div class="spinner"></div>
+                    <p>Loading weather data...</p>
+                </div>
+            </div>
+
+            <div id="history-panel" class="history-panel">
+                <div class="history-header">
+                    <h2>Saved Locations</h2>
+                    <button id="close-history" class="icon-button">
+                        <span class="material-icons">close</span>
+                    </button>
+                </div>
+                <div id="history-list" class="history-list"></div>
+            </div>
+        </main>
+
+        <nav class="bottom-nav">
+            <a href="index.html" class="nav-item">
+                <span class="material-icons">home</span>
+                <span>Home</span>
+            </a>
+            <a href="apps.html" class="nav-item active">
+                <span class="material-icons">apps</span>
+                <span>Apps</span>
+            </a>
+            <a href="wallet.html" class="nav-item">
+                <span class="material-icons">account_balance_wallet</span>
+                <span>Wallet</span>
+            </a>
+            <a href="settings.html" class="nav-item">
+                <span class="material-icons">settings</span>
+                <span>Settings</span>
+            </a>
+        </nav>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Weather app functionality
+            const cityInput = document.getElementById('city-input');
+            const searchBtn = document.getElementById('search-btn');
+            const locationBtn = document.getElementById('location-btn');
+            const saveLocationBtn = document.getElementById('save-location-btn');
+            const weatherCard = document.getElementById('weather-card');
+            const errorMessage = document.getElementById('error-message');
+            const loading = document.getElementById('loading');
+            const historyBtn = document.getElementById('historyBtn');
+            const historyPanel = document.getElementById('history-panel');
+            const closeHistory = document.getElementById('close-history');
+            const historyList = document.getElementById('history-list');
+            
+            // Weather data elements
+            const cityName = document.getElementById('city-name');
+            const dateTime = document.getElementById('date-time');
+            const weatherIcon = document.getElementById('weather-icon');
+            const temperature = document.getElementById('temperature');
+            const weatherDescription = document.getElementById('weather-description');
+            const feelsLike = document.getElementById('feels-like');
+            const humidity = document.getElementById('humidity');
+            const windSpeed = document.getElementById('wind-speed');
+            const visibility = document.getElementById('visibility');
+            
+            // OpenWeatherMap API key
+            const API_KEY = '5f4e49c5d459b4a176e1f1a88a44e8e7'; // This is a sample key, replace with your own
+            const API_URL = 'https://api.openweathermap.org/data/2.5/weather';
+            
+            // Search for weather by city name
+            searchBtn.addEventListener('click', () => {
+                const city = cityInput.value.trim();
+                if (city) {
+                    getWeatherByCity(city);
+                }
+            });
+            
+            // Enter key in input
+            cityInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const city = cityInput.value.trim();
+                    if (city) {
+                        getWeatherByCity(city);
+                    }
+                }
+            });
+            
+            // Get weather by current location
+            locationBtn.addEventListener('click', () => {
+                if (navigator.geolocation) {
+                    showLoading();
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            const lat = position.coords.latitude;
+                            const lon = position.coords.longitude;
+                            getWeatherByCoords(lat, lon);
+                        },
+                        (error) => {
+                            hideLoading();
+                            showError('Unable to retrieve your location. ' + error.message);
+                        }
+                    );
+                } else {
+                    showError('Geolocation is not supported by your browser.');
+                }
+            });
+            
+            // Get weather by city name
+            async function getWeatherByCity(city) {
+                try {
+                    showLoading();
+                    const response = await fetch(`${API_URL}?q=${city}&appid=${API_KEY}&units=metric`);
+                    processWeatherResponse(response);
+                } catch (error) {
+                    console.error('Error fetching weather:', error);
+                    hideLoading();
+                    showError('An error occurred while fetching weather data.');
+                }
+            }
+            
+            // Get weather by coordinates
+            async function getWeatherByCoords(lat, lon) {
+                try {
+                    showLoading();
+                    const response = await fetch(`${API_URL}?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`);
+                    processWeatherResponse(response);
+                } catch (error) {
+                    console.error('Error fetching weather:', error);
+                    hideLoading();
+                    showError('An error occurred while fetching weather data.');
+                }
+            }
+            
+            // Process weather API response
+            async function processWeatherResponse(response) {
+                if (response.ok) {
+                    const data = await response.json();
+                    displayWeather(data);
+                } else {
+                    if (response.status === 404) {
+                        showError('City not found. Please try again.');
+                    } else {
+                        showError('An error occurred. Please try again later.');
+                    }
+                    hideLoading();
+                }
+            }
+            
+            // Display weather data
+            function displayWeather(data) {
+                hideLoading();
+                hideError();
+                
+                // Update UI with weather data
+                cityName.textContent = `${data.name}, ${data.sys.country}`;
+                
+                const now = new Date();
+                dateTime.textContent = now.toLocaleString();
+                
+                const iconCode = data.weather[0].icon;
+                weatherIcon.src = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
+                weatherIcon.alt = data.weather[0].description;
+                
+                temperature.textContent = Math.round(data.main.temp);
+                weatherDescription.textContent = data.weather[0].description;
+                
+                feelsLike.textContent = `${Math.round(data.main.feels_like)}°C`;
+                humidity.textContent = `${data.main.humidity}%`;
+                windSpeed.textContent = `${Math.round(data.wind.speed * 3.6)} km/h`; // Convert m/s to km/h
+                visibility.textContent = `${(data.visibility / 1000).toFixed(1)} km`;
+                
+                // Show weather card
+                weatherCard.classList.remove('hidden');
+                
+                // Save last searched city
+                //saveLastSearched(data);
+            }
+            
+            // Save location button
+            saveLocationBtn.addEventListener('click', () => {
+                const city = cityName.textContent;
+                if (city) {
+                    //saveLocation(city);
+                    alert(`${city} has been saved to your locations.`);
+                }
+            });
+            
+            
+            // History functionality
+            historyBtn.addEventListener('click', () => {
+                historyPanel.classList.add('active');
+                //loadSavedLocations();
+            });
+            
+            closeHistory.addEventListener('click', () => {
+                historyPanel.classList.remove('active');
+            });
+            
+            
+            
+            // Helper functions
+            function showLoading() {
+                loading.classList.remove('hidden');
+                weatherCard.classList.add('hidden');
+                errorMessage.classList.add('hidden');
+            }
+            
+            function hideLoading() {
+                loading.classList.add('hidden');
+            }
+            
+            function showError(message) {
+                errorMessage.querySelector('p').textContent = message;
+                errorMessage.classList.remove('hidden');
+                weatherCard.classList.add('hidden');
+            }
+            
+            function hideError() {
+                errorMessage.classList.add('hidden');
+            }
+            
+            // Check for last searched city
+            function checkLastSearched() {
+                //const user = firebase.auth().currentUser;
+                //if (user) {
+                    //firebase.firestore().collection('users').doc(user.uid)
+                        //.get()
+                        //.then(doc => {
+                            //if (doc.exists && doc.data().lastWeatherSearch) {
+                                //const lastSearch = doc.data().lastWeatherSearch;
+                                //getWeatherByCity(lastSearch.city);
+                            //}
+                        //})
+                        //.catch(error => {
+                            //console.error("Error getting last search: ", error);
+                        //});
+                //}
+            }
+            
+            // Check last searched on load
+            setTimeout(checkLastSearched, 1000);
+        });
+    </script>
+</body>
+</html>

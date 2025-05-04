@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Magnetar - Network</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#C00000">
+  <meta name="description" content="Magnetar - Network">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Magnetar">
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --magnetar-red: #C00000;
+      --text-dark: #1A1A1A;
+    }
+    
+    body {
+      font-family: 'Open Sans', sans-serif;
+      color: var(--text-dark);
+      background-color: #f7f7f7;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    h1, h2, h3, h4, h5, h6, .heading {
+      font-family: 'Roboto', sans-serif;
+    }
+    
+    .btn-primary {
+      background-color: var(--magnetar-red);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    .btn-primary:hover, .btn-primary:active {
+      background-color: #A00000;
+      transform: translateY(-1px);
+    }
+    
+    .btn-primary:active {
+      transform: translateY(1px);
+    }
+    
+    /* Custom input styles */
+    input, textarea, select {
+      background-color: #f5f5f5 !important;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    input:focus, textarea:focus, select:focus {
+      outline: none !important;
+      background-color: #f0f0f0 !important;
+      box-shadow: 0 0 0 2px rgba(192, 0, 0, 0.2) !important;
+    }
+    
+    .card {
+      background-color: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    .card:hover {
+      box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+      transform: translateY(-3px);
+    }
+    
+    /* Page transition animation */
+    .page-transition {
+      animation: fadeIn 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Loading animation */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    
+    .loading-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 3px solid rgba(192, 0, 0, 0.1);
+      border-top-color: var(--magnetar-red);
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Active nav item */
+    .nav-item.active {
+      color: var(--magnetar-red);
+    }
+    
+    /* Prevent zoom */
+    * {
+      touch-action: manipulation;
+    }
+  </style>
+  <script>
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtNedkJo6ikNneZZdrheiWbE3Dn2B8kwQ",
+      authDomain: "ces-project-f8b4e.firebaseapp.com",
+      databaseURL: "https://ces-project-f8b4e-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "ces-project-f8b4e",
+      storageBucket: "ces-project-f8b4e.firebasestorage.app",
+      messagingSenderId: "580767851656",
+      appId: "1:580767851656:web:2c852e7edb81a6decdeb3d",
+      measurementId: "G-K73DSMWBTP"
+    };
+    
+    // Add page transition animation
+    document.addEventListener('DOMContentLoaded', function() {
+      document.body.classList.add('page-transition');
+    });
+    
+    // Prevent zoom on double-tap
+    document.addEventListener('touchstart', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Prevent zoom on pinch
+    document.addEventListener('touchmove', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Prevent zoom on double-tap
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(event) {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, { passive: false });
+  </script>
+</head>
+
+<body class="bg-gray-100 min-h-screen pb-16">
+  <!-- Loading overlay -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="loading-spinner"></div>
+  </div>
+  
+  <!-- Header -->
+  <header class="bg-white shadow-sm p-4 flex items-center justify-between sticky top-0 z-10">
+    <div class="flex items-center">
+      <img 
+        src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20250127_191600_0000-6AwFlDvh6mQeKcJJwH3Jlyef5Qpeic.png" 
+        alt="Magnetar Logo" 
+        class="w-8 h-8 mr-2"
+      />
+      <h1 class="text-xl font-bold">Network</h1>
+    </div>
+    <div class="flex space-x-2">
+      <button class="p-2 rounded-full hover:bg-gray-100">
+        <span class="material-icons text-gray-600">person_add</span>
+      </button>
+      <button class="p-2 rounded-full hover:bg-gray-100">
+        <span class="material-icons text-gray-600">notifications</span>
+      </button>
+    </div>
+  </header>
+  
+  <main class="container mx-auto px-4 py-6 pb-24 max-w-lg">
+    <div class="mb-6">
+      <h2 class="text-2xl font-bold mb-4">Your Network</h2>
+      <p class="text-gray-600">Connect and collaborate with your team members.</p>
+    </div>
+    
+    <!-- Network content would go here -->
+    <div class="space-y-6">
+      <div class="card p-6">
+        <h3 class="font-bold text-lg mb-4">Team Members</h3>
+        <p>Network content coming soon...</p>
+      </div>
+    </div>
+  </main>
+  
+  <!-- Bottom Navigation -->
+  <nav class="fixed bottom-0 w-full bg-white border-t border-gray-200 pt-2 pb-safe z-10">
+    <div class="flex justify-around items-center">
+      <a href="dashboard.html" class="flex flex-col items-center p-2 text-gray-600 nav-item">
+        <span class="material-icons">home</span>
+        <span class="text-xs mt-1">Home</span>
+      </a>
+      <a href="marketplace.html" class="flex flex-col items-center p-2 text-gray-600 nav-item">
+        <span class="material-icons">storefront</span>
+        <span class="text-xs mt-1">Market</span>
+      </a>
+      <a href="apps.html" class="flex flex-col items-center p-2 text-gray-600 nav-item">
+        <span class="material-icons">apps</span>
+        <span class="text-xs mt-1">Apps</span>
+      </a>
+      <a href="network.html" class="flex flex-col items-center p-2 text-red-600 nav-item active">
+        <span class="material-icons">group</span>
+        <span class="text-xs mt-1">Network</span>
+      </a>
+      <a href="profile.html" class="flex flex-col items-center p-2 text-gray-600 nav-item">
+        <span class="material-icons">person</span>
+        <span class="text-xs mt-1">Profile</span>
+      </a>
+    </div>
+  </nav>
+  
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
+          console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        }, function(err) {
+          console.log('ServiceWorker registration failed: ', err);
+        });
+      });
+    }
+  </script>
+</body>
+</html>

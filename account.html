@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Magnetar - Account</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#C00000">
+  <meta name="description" content="Magnetar - Account Management">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Magnetar">
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --magnetar-red: #C00000;
+      --text-dark: #1A1A1A;
+    }
+    
+    body {
+      font-family: 'Open Sans', sans-serif;
+      color: var(--text-dark);
+      background-color: #f5f5f5;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    h1, h2, h3, h4, h5, h6, .heading {
+      font-family: 'Roboto', sans-serif;
+    }
+    
+    .btn-primary {
+      background-color: var(--magnetar-red);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    .btn-primary:hover, .btn-primary:active {
+      background-color: #A00000;
+      transform: translateY(-1px);
+    }
+    
+    .btn-primary:active {
+      transform: translateY(1px);
+    }
+    
+    /* Loading animation */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    
+    .loading-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 3px solid rgba(192, 0, 0, 0.1);
+      border-top-color: var(--magnetar-red);
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Card hover effect */
+    .account-card {
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    .account-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .account-card:active {
+      transform: translateY(0);
+    }
+    
+    /* Prevent zoom */
+    * {
+      touch-action: manipulation;
+    }
+  </style>
+  <script>
+    // Prevent zoom on double-tap
+    document.addEventListener('touchstart', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Prevent zoom on pinch
+    document.addEventListener('touchmove', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Prevent zoom on double-tap
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(event) {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, { passive: false });
+  </script>
+</head>
+
+<body class="bg-gray-100 flex flex-col mx-auto min-h-screen max-w-sm w-full">
+  <!-- Loading overlay -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <!-- Header -->
+  <header class="bg-red-600 text-white p-4 text-lg font-semibold flex items-center justify-between sticky top-0 z-50">
+    <div class="flex items-center space-x-2">
+      <span class="material-icons cursor-pointer" onclick="window.history.back()">arrow_back</span>
+      <h1>Account</h1>
+    </div>
+    <div class="flex items-center space-x-4">
+      <span class="material-icons text-2xl cursor-pointer" id="logoutBtn">logout</span>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col items-center p-4 w-full overflow-y-auto pb-24 space-y-6">
+    <!-- User Profile Card -->
+    <div class="bg-white rounded-lg shadow w-full overflow-hidden">
+      <div class="p-4 flex items-center">
+        <div id="userAvatar" class="w-16 h-16 rounded-full bg-gray-300 mr-4"></div>
+        <div>
+          <h2 id="userName" class="text-xl font-bold">Loading...</h2>
+          <p id="userEmail" class="text-gray-600">Loading...</p>
+          <p id="memberId" class="text-sm text-gray-500 mt-1">Member ID: Loading...</p>
+        </div>
+      </div>
+      <div class="border-t border-gray-100 p-4 flex justify-between">
+        <button class="flex items-center text-gray-700" onclick="window.location.href='edit-profile.html'">
+          <span class="material-icons mr-1 text-gray-500">edit</span>
+          Edit Profile
+        </button>
+        <button class="flex items-center text-gray-700">
+          <span class="material-icons mr-1 text-gray-500">verified_user</span>
+          Verify Account
+        </button>
+      </div>
+    </div>
+
+    <!-- Wallet Balance -->
+    <div class="bg-white rounded-lg shadow w-full p-4">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="font-bold">Wallet Balance</h3>
+        <button class="text-red-600 font-medium">View History</button>
+      </div>
+      <div class="flex items-center justify-between">
+        <div>
+          <div id="balanceAmount" class="text-2xl font-bold">₱0.00</div>
+          <div class="text-sm text-gray-600">Available balance</div>
+        </div>
+        <div class="flex space-x-2">
+          <button class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
+            Add Money
+          </button>
+          <button class="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg text-sm font-medium">
+            Withdraw
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Account Options -->
+    <div class="w-full space-y-3">
+      <h3 class="font-bold text-gray-700 mb-2">Account Management</h3>
+      
+      <div class="bg-white rounded-lg p-4 shadow flex items-center cursor-pointer account-card">
+        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+          <span class="material-icons text-blue-600">credit_card</span>
+        </div>
+        <div class="flex-1">
+          <h3 class="font-medium">Payment Methods</h3>
+          <p class="text-sm text-gray-600">Manage your payment options</p>
+        </div>
+        <span class="material-icons text-gray-400">chevron_right</span>
+      </div>
+      
+      <div class="bg-white rounded-lg p-4 shadow flex items-center cursor-pointer account-card">
+        <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mr-3">
+          <span class="material-icons text-green-600">receipt_long</span>
+        </div>
+        <div class="flex-1">
+          <h3 class="font-medium">Transaction History</h3>
+          <p class="text-sm text-gray-600">View your past transactions</p>
+        </div>
+        <span class="material-icons text-gray-400">chevron_right</span>
+      </div>
+      
+      <div class="bg-white rounded-lg p-4 shadow flex items-center cursor-pointer account-card">
+        <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mr-3">
+          <span class="material-icons text-purple-600">security</span>
+        </div>
+        <div class="flex-1">
+          <h3 class="font-medium">Security Settings</h3>
+          <p class="text-sm text-gray-600">Manage password and security</p>
+        </div>
+        <span class="material-icons text-gray-400">chevron_right</span>
+      </div>
+    </div>
+
+    <!-- Affiliate Program -->
+    <div class="w-full space-y-3">
+      <h3 class="font-bold text-gray-700 mb-2">Affiliate Program</h3>
+      
+      <div class="bg-white rounded-lg p-4 shadow flex items-center cursor-pointer account-card">
+        <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center mr-3">
+          <span class="material-icons text-yellow-600">group</span>
+        </div>
+        <div class="flex-1">
+          <h3 class="font-medium">My Team</h3>
+          <p class="text-sm text-gray-600">View and manage your team members</p>
+        </div>
+        <span class="material-icons text-gray-400">chevron_right</span>
+      </div>
+      
+      <div class="bg-white rounded-lg p-4 shadow flex items-center cursor-pointer account-card">
+        <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center mr-3">
+          <span class="material-icons text-red-600">share</span>
+        </div>
+        <div class="flex-1">
+          <h3 class="font-medium">Referral Program</h3>
+          <p class="text-sm text-gray-600">Invite friends and earn rewards</p>
+        </div>
+        <span class="material-icons text-gray-400">chevron_right</span>
+      </div>
+      
+      <div class="bg-white rounded-lg p-4 shadow flex items-center cursor-pointer account-card">
+        <div class="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center mr-3">
+          <span class="material-icons text-teal-600">leaderboard</span>
+        </div>
+        <div class="flex-1">
+          <h3 class="font-medium">Performance Dashboard</h3>
+          <p class="text-sm text-gray-600">Track your affiliate performance</p>
+        </div>
+        <span class="material-icons text-gray-400">chevron_right</span>
+      </div>
+    </div>
+
+    <!-- Support Section -->
+    <div class="w-full space-y-3">
+      <h3 class="font-bold text-gray-700 mb-2">Support</h3>
+      
+      <div class="bg-white rounded-lg p-4 shadow flex items-center cursor-pointer account-card">
+        <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center mr-3">
+          <span class="material-icons text-indigo-600">help_outline</span>
+        </div>
+        <div class="flex-1">
+          <h3 class="font-medium">Help Center</h3>
+          <p class="text-sm text-gray-600">FAQs and support resources</p>
+        </div>
+        <span class="material-icons text-gray-400">chevron_right</span>
+      </div>
+      
+      <div class="bg-white rounded-lg p-4 shadow flex items-center cursor-pointer account-card">
+        <div class="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center mr-3">
+          <span class="material-icons text-orange-600">contact_support</span>
+        </div>
+        <div class="flex-1">
+          <h3 class="font-medium">Contact Support</h3>
+          <p class="text-sm text-gray-600">Get help from our team</p>
+        </div>
+        <span class="material-icons text-gray-400">chevron_right</span>
+      </div>
+    </div>
+  </main>
+
+  <!-- Bottom Nav -->
+  <div class="bg-white border-t border-gray-300 w-full max-w-sm flex justify-around items-center py-2 fixed bottom-0 left-1/2 transform -translate-x-1/2">
+    <div class="nav-item cursor-pointer transform hover:scale-110 transition-transform duration-200" onclick="window.location.href='index.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">security</span>
+    </div>
+    <div class="nav-item cursor-pointer transform hover:scale-110 transition-transform duration-200" onclick="window.location.href='account.html'">
+      <span class="material-icons text-red-600 text-xl" style="font-size: 1.5em">account_balance_wallet</span>
+    </div>
+    <div class="nav-item cursor-pointer transform scale-125 -mt-1 relative hover:scale-130 transition-transform duration-200" onclick="window.location.href='create-post.html'">
+      <span class="material-icons text-white text-xl p-2 shadow-md" style="font-size: 1.5em; background-color: #FF0000; border-radius: 50%; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">add</span>
+    </div>
+    <div class="nav-item cursor-pointer transform hover:scale-110 transition-transform duration-200" onclick="window.location.href='tools.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">dns</span>
+    </div>
+    <div class="nav-item cursor-pointer transform hover:scale-110 transition-transform duration-200" onclick="window.location.href='persona.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">face</span>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js";
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtNedkJo6ikNneZZdrheiWbE3Dn2B8kwQ",
+      authDomain: "ces-project-f8b4e.firebaseapp.com",
+      databaseURL: "https://ces-project-f8b4e-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "ces-project-f8b4e",
+      storageBucket: "ces-project-f8b4e.firebasestorage.app",
+      messagingSenderId: "580767851656",
+      appId: "1:580767851656:web:2c852e7edb81a6decdeb3d",
+      measurementId: "G-K73DSMWBTP"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    
+    // DOM elements
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const userAvatar = document.getElementById('userAvatar');
+    const userName = document.getElementById('userName');
+    const userEmail = document.getElementById('userEmail');
+    const memberId = document.getElementById('memberId');
+    const balanceAmount = document.getElementById('balanceAmount');
+    const logoutBtn = document.getElementById('logoutBtn');
+    
+    // Show loading initially
+    loadingOverlay.classList.add('active');
+    
+    // Check authentication state
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // User is signed in
+        console.log("User is signed in:", user.uid);
+        await loadUserProfile(user);
+        // Hide loading
+        loadingOverlay.classList.remove('active');
+      } else {
+        // User is signed out, redirect to login
+        window.location.href = 'email-login.html';
+      }
+    });
+    
+    // Load user profile
+    async function loadUserProfile(user) {
+      try {
+        // Get user data from Firestore
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          
+          // Set user name
+          userName.textContent = userData.displayName || user.displayName || user.email.split('@')[0];
+          
+          // Set user email
+          userEmail.textContent = user.email;
+          
+          // Set member ID
+          memberId.textContent = `Member ID: ${userData.memberId || 'Not set'}`;
+          
+          // Set balance
+          balanceAmount.textContent = `₱${userData.balance?.toFixed(2) || '0.00'}`;
+          
+          // Set avatar
+          if (userData.avatar || user.photoURL) {
+            userAvatar.style.backgroundImage = `url(${userData.avatar || user.photoURL})`;
+            userAvatar.style.backgroundSize = 'cover';
+            userAvatar.style.backgroundPosition = 'center';
+          } else {
+            // Set default avatar with initials
+            const initials = userData.displayName ? 
+              userData.displayName.substring(0, 2).toUpperCase() : 
+              user.email.substring(0, 2).toUpperCase();
+            
+            userAvatar.innerHTML = `<div class="w-full h-full flex items-center justify-center text-white font-bold">${initials}</div>`;
+            userAvatar.style.backgroundColor = getRandomColor();
+          }
+        }
+      } catch (error) {
+        console.error("Error loading user profile:", error);
+      }
+    }
+    
+    // Handle logout
+    logoutBtn.addEventListener('click', async () => {
+      try {
+        loadingOverlay.classList.add('active');
+        await signOut(auth);
+        // Redirect will happen automatically due to onAuthStateChanged
+      } catch (error) {
+        console.error("Error signing out:", error);
+        loadingOverlay.classList.remove('active');
+      }
+    });
+    
+    // Add click event listeners to account cards
+    document.querySelectorAll('.account-card').forEach(card => {
+      card.addEventListener('click', function() {
+        // Show loading animation
+        loadingOverlay.classList.add('active');
+        
+        // Get card name
+        const cardName = this.querySelector('h3').textContent;
+        
+        // Simulate loading delay
+        setTimeout(() => {
+          loadingOverlay.classList.remove('active');
+          
+          // For demo purposes, show an alert with the card name
+          alert(`${cardName} feature will be available in the next update!`);
+        }, 800);
+      });
+    });
+    
+    // Helper function to get random color for avatars
+    function getRandomColor() {
+      const colors = ['#4F46E5', '#10B981', '#EF4444', '#F59E0B', '#3B82F6', '#8B5CF6', '#F97316', '#EC4899'];
+      return colors[Math.floor(Math.random() * colors.length)];
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Magnetar - App Details</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#C00000">
+  <meta name="description" content="Magnetar - App Details">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Magnetar">
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --magnetar-red: #C00000;
+      --text-dark: #1A1A1A;
+    }
+    
+    body {
+      font-family: 'Open Sans', sans-serif;
+      color: var(--text-dark);
+      background-color: #f5f5f5;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    h1, h2, h3, h4, h5, h6, .heading {
+      font-family: 'Roboto', sans-serif;
+    }
+    
+    .btn-primary {
+      background-color: var(--magnetar-red);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    .btn-primary:hover, .btn-primary:active {
+      background-color: #A00000;
+      transform: translateY(-1px);
+    }
+    
+    .btn-primary:active {
+      transform: translateY(1px);
+    }
+    
+    /* Loading animation */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    
+    .loading-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 3px solid rgba(192, 0, 0, 0.1);
+      border-top-color: var(--magnetar-red);
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Bottom nav hover animation */
+    .nav-item {
+      transition: all 0.3s ease;
+    }
+    
+    .nav-item:hover {
+      transform: translateY(-5px);
+    }
+
+    /* Center button styles */
+    .center-button {
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      transform: translateY(-10px);
+      transition: all 0.3s ease;
+    }
+
+    .center-button:hover {
+      transform: translateY(-15px);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+    }
+
+    /* Screenshot gallery */
+    .screenshot-scroll {
+      scrollbar-width: none;
+    }
+    .screenshot-scroll::-webkit-scrollbar {
+      display: none;
+    }
+    
+    /* Review stars */
+    .star-filled {
+      color: #FFD700;
+    }
+    .star-empty {
+      color: #D1D5DB;
+    }
+  </style>
+  <script>
+    // Prevent zoom on double-tap
+    document.addEventListener('touchstart', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Prevent zoom on pinch
+    document.addEventListener('touchmove', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Prevent zoom on double-tap
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(event) {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, { passive: false });
+  </script>
+</head>
+
+<body class="bg-gray-100 flex flex-col mx-auto min-h-screen max-w-sm w-full">
+  <!-- Loading overlay -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <!-- Header -->
+  <header class="bg-white text-gray-800 p-4 text-lg font-semibold flex items-center justify-between sticky top-0 z-50 shadow-sm">
+    <div class="flex items-center">
+      <span class="material-icons text-gray-700 mr-2 cursor-pointer" id="backBtn">arrow_back</span>
+      <h1 class="text-lg font-semibold">App Details</h1>
+    </div>
+    <div class="flex items-center space-x-6">
+      <span class="material-icons text-2xl cursor-pointer text-gray-700">share</span>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col items-center w-full overflow-y-auto pb-24">
+    <!-- App Hero Section -->
+    <div class="w-full bg-white p-4 shadow-sm">
+      <div class="flex items-center">
+        <div class="w-16 h-16 bg-gray-200 rounded-xl flex items-center justify-center mr-4">
+          <span class="material-icons text-4xl text-red-600" id="appIcon">video_library</span>
+        </div>
+        <div class="flex-1">
+          <h1 class="text-xl font-bold" id="appName">YouTube to MP3 Converter</h1>
+          <div class="flex items-center mt-1">
+            <div class="flex">
+              <span class="material-icons text-yellow-500 text-sm">star</span>
+              <span class="material-icons text-yellow-500 text-sm">star</span>
+              <span class="material-icons text-yellow-500 text-sm">star</span>
+              <span class="material-icons text-yellow-500 text-sm">star</span>
+              <span class="material-icons text-yellow-500 text-sm">star_half</span>
+            </div>
+            <span class="text-sm text-gray-600 ml-1">4.5 (1,245 reviews)</span>
+          </div>
+          <div class="flex items-center mt-1">
+            <span class="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full mr-2">Free</span>
+            <span class="text-xs text-gray-600">50K+ downloads</span>
+          </div>
+        </div>
+      </div>
+      <div class="mt-4">
+        <button class="w-full btn-primary text-white p-3 rounded-lg font-medium">
+          Install App
+        </button>
+      </div>
+    </div>
+
+    <!-- Screenshots -->
+    <div class="w-full bg-white mt-2 p-4 shadow-sm">
+      <h2 class="text-lg font-bold mb-3">Screenshots</h2>
+      <div class="screenshot-scroll flex overflow-x-auto gap-3 pb-2">
+        <img src="https://placeholder.svg?height=180&width=100" alt="Screenshot 1" class="rounded-lg h-44 w-auto object-cover">
+        <img src="https://placeholder.svg?height=180&width=100" alt="Screenshot 2" class="rounded-lg h-44 w-auto object-cover">
+        <img src="https://placeholder.svg?height=180&width=100" alt="Screenshot 3" class="rounded-lg h-44 w-auto object-cover">
+        <img src="https://placeholder.svg?height=180&width=100" alt="Screenshot 4" class="rounded-lg h-44 w-auto object-cover">
+      </div>
+    </div>
+
+    <!-- Description -->
+    <div class="w-full bg-white mt-2 p-4 shadow-sm">
+      <h2 class="text-lg font-bold mb-2">Description</h2>
+      <p class="text-sm text-gray-700" id="appDescription">
+        Convert YouTube videos to MP3 audio files with just a few clicks. This app allows you to extract audio from any YouTube video and save it to your device. Perfect for creating your own music playlists or saving audio content for offline listening.
+      </p>
+      <div class="mt-3">
+        <button class="text-red-600 text-sm font-medium">Read More</button>
+      </div>
+    </div>
+
+    <!-- Features -->
+    <div class="w-full bg-white mt-2 p-4 shadow-sm">
+      <h2 class="text-lg font-bold mb-3">Features</h2>
+      <ul class="text-sm text-gray-700 space-y-2">
+        <li class="flex items-start">
+          <span class="material-icons text-green-600 mr-2 text-base">check_circle</span>
+          <span>Convert YouTube videos to MP3 format</span>
+        </li>
+        <li class="flex items-start">
+          <span class="material-icons text-green-600 mr-2 text-base">check_circle</span>
+          <span>High-quality audio extraction</span>
+        </li>
+        <li class="flex items-start">
+          <span class="material-icons text-green-600 mr-2 text-base">check_circle</span>
+          <span>Batch conversion of multiple videos</span>
+        </li>
+        <li class="flex items-start">
+          <span class="material-icons text-green-600 mr-2 text-base">check_circle</span>
+          <span>ID3 tag editor for MP3 metadata</span>
+        </li>
+        <li class="flex items-start">
+          <span class="material-icons text-green-600 mr-2 text-base">check_circle</span>
+          <span>No registration required</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Reviews -->
+    <div class="w-full bg-white mt-2 p-4 shadow-sm">
+      <div class="flex justify-between items-center mb-3">
+        <h2 class="text-lg font-bold">Reviews</h2>
+        <a href="#" class="text-red-600 text-sm font-medium">See All</a>
+      </div>
+      
+      <!-- Review Summary -->
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex flex-col items-center">
+          <span class="text-3xl font-bold">4.5</span>
+          <div class="flex mt-1">
+            <span class="material-icons text-yellow-500 text-sm">star</span>
+            <span class="material-icons text-yellow-500 text-sm">star</span>
+            <span class="material-icons text-yellow-500 text-sm">star</span>
+            <span class="material-icons text-yellow-500 text-sm">star</span>
+            <span class="material-icons text-yellow-500 text-sm">star_half</span>
+          </div>
+          <span class="text-xs text-gray-600 mt-1">1,245 reviews</span>
+        </div>
+        
+        <div class="flex-1 ml-6">
+          <!-- 5 stars -->
+          <div class="flex items-center mb-1">
+            <span class="text-xs w-8">5 ★</span>
+            <div class="flex-1 h-2 bg-gray-200 rounded-full mx-2">
+              <div class="h-2 bg-yellow-500 rounded-full" style="width: 75%"></div>
+            </div>
+            <span class="text-xs w-8 text-right">75%</span>
+          </div>
+          
+          <!-- 4 stars -->
+          <div class="flex items-center mb-1">
+            <span class="text-xs w-8">4 ★</span>
+            <div class="flex-1 h-2 bg-gray-200 rounded-full mx-2">
+              <div class="h-2 bg-yellow-500 rounded-full" style="width: 15%"></div>
+            </div>
+            <span class="text-xs w-8 text-right">15%</span>
+          </div>
+          
+          <!-- 3 stars -->
+          <div class="flex items-center mb-1">
+            <span class="text-xs w-8">3 ★</span>
+            <div class="flex-1 h-2 bg-gray-200 rounded-full mx-2">
+              <div class="h-2 bg-yellow-500 rounded-full" style="width: 5%"></div>
+            </div>
+            <span class="text-xs w-8 text-right">5%</span>
+          </div>
+          
+          <!-- 2 stars -->
+          <div class="flex items-center mb-1">
+            <span class="text-xs w-8">2 ★</span>
+            <div class="flex-1 h-2 bg-gray-200 rounded-full mx-2">
+              <div class="h-2 bg-yellow-500 rounded-full" style="width: 3%"></div>
+            </div>
+            <span class="text-xs w-8 text-right">3%</span>
+          </div>
+          
+          <!-- 1 star -->
+          <div class="flex items-center">
+            <span class="text-xs w-8">1 ★</span>
+            <div class="flex-1 h-2 bg-gray-200 rounded-full mx-2">
+              <div class="h-2 bg-yellow-500 rounded-full" style="width: 2%"></div>
+            </div>
+            <span class="text-xs w-8 text-right">2%</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Individual Reviews -->
+      <div class="space-y-4">
+        <!-- Review 1 -->
+        <div class="border-b border-gray-200 pb-4">
+          <div class="flex justify-between items-start">
+            <div class="flex items-start">
+              <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center mr-2">
+                <span class="material-icons text-gray-600 text-sm">person</span>
+              </div>
+              <div>
+                <h3 class="font-medium text-sm">John D.</h3>
+                <div class="flex mt-1">
+                  <span class="material-icons text-yellow-500 text-xs">star</span>
+                  <span class="material-icons text-yellow-500 text-xs">star</span>
+                  <span class="material-icons text-yellow-500 text-xs">star</span>
+                  <span class="material-icons text-yellow-500 text-xs">star</span>
+                  <span class="material-icons text-yellow-500 text-xs">star</span>
+                </div>
+              </div>
+            </div>
+            <span class="text-xs text-gray-500">2 days ago</span>
+          </div>
+          <p class="text-sm text-gray-700 mt-2">
+            Great app! Works perfectly for converting YouTube videos to MP3. The audio quality is excellent and the process is very fast.
+          </p>
+        </div>
+        
+        <!-- Review 2 -->
+        <div class="border-b border-gray-200 pb-4">
+          <div class="flex justify-between items-start">
+            <div class="flex items-start">
+              <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center mr-2">
+                <span class="material-icons text-gray-600 text-sm">person</span>
+              </div>
+              <div>
+                <h3 class="font-medium text-sm">Sarah M.</h3>
+                <div class="flex mt-1">
+                  <span class="material-icons text-yellow-500 text-xs">star</span>
+                  <span class="material-icons text-yellow-500 text-xs">star</span>
+                  <span class="material-icons text-yellow-500 text-xs">star</span>
+                  <span class="material-icons text-yellow-500 text-xs">star</span>
+                  <span class="material-icons text-gray-300 text-xs">star</span>
+                </div>
+              </div>
+            </div>
+            <span class="text-xs text-gray-500">1 week ago</span>
+          </div>
+          <p class="text-sm text-gray-700 mt-2">
+            Very useful app. I use it all the time to create my playlists. Would give 5 stars but sometimes it's a bit slow with longer videos.
+          </p>
+        </div>
+        
+        <!-- Review 3 -->
+        <div>
+          <div class="flex justify-between items-start">
+            <div class="flex items-start">
+              <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center mr-2">
+                <span class="material-icons text-gray-600 text-sm">person</span>
+              </div>
+              <div>
+                <h3 class="font-medium text-sm">Michael T.</h3>
+                <div class="flex mt-1">
+                  <span class="material-icons text-yellow-500 text-xs">star</span>
+                  <span class="material-icons text-yellow-500 text-xs">star</span>
+                  <span class="material-icons text-yellow-500 text-xs">star</span>
+                  <span class="material-icons text-yellow-500 text-xs">star</span>
+                  <span class="material-icons text-yellow-500 text-xs">star</span>
+                </div>
+              </div>
+            </div>
+            <span class="text-xs text-gray-500">2 weeks ago</span>
+          </div>
+          <p class="text-sm text-gray-700 mt-2">
+            This app is a lifesaver! I needed to extract audio from several YouTube tutorials for my studies, and this made it super easy. Highly recommend!
+          </p>
+        </div>
+      </div>
+      
+      <button class="w-full mt-4 border border-gray-300 text-gray-700 p-2 rounded-lg font-medium">
+        Write a Review
+      </button>
+    </div>
+
+    <!-- Similar Apps -->
+    <div class="w-full bg-white mt-2 p-4 shadow-sm mb-4">
+      <div class="flex justify-between items-center mb-3">
+        <h2 class="text-lg font-bold">Similar Apps</h2>
+        <a href="#" class="text-red-600 text-sm font-medium">See All</a>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <!-- Similar App 1 -->
+        <div class="bg-gray-50 rounded-lg p-3 shadow-sm">
+          <div class="w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center mb-2">
+            <span class="material-icons text-2xl text-blue-600">video_file</span>
+          </div>
+          <h3 class="font-medium text-sm">Video Downloader</h3>
+          <div class="flex items-center mt-1">
+            <span class="material-icons text-yellow-500 text-xs">star</span>
+            <span class="text-xs text-gray-600 ml-1">4.3</span>
+          </div>
+          <span class="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full mt-1 inline-block">Free</span>
+        </div>
+        
+        <!-- Similar App 2 -->
+        <div class="bg-gray-50 rounded-lg p-3 shadow-sm">
+          <div class="w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center mb-2">
+            <span class="material-icons text-2xl text-purple-600">music_note</span>
+          </div>
+          <h3 class="font-medium text-sm">Music Player Pro</h3>
+          <div class="flex items-center mt-1">
+            <span class="material-icons text-yellow-500 text-xs">star</span>
+            <span class="text-xs text-gray-600 ml-1">4.7</span>
+          </div>
+          <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full mt-1 inline-block">Premium</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Bottom Nav -->
+  <div class="bg-white border-t border-gray-300 w-full max-w-sm flex justify-around items-center py-2 fixed bottom-0 left-1/2 transform -translate-x-1/2">
+    <div class="nav-item cursor-pointer" onclick="window.location.href='social.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">people</span>
+    </div>
+    <div class="nav-item cursor-pointer" onclick="window.location.href='wallet.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">account_balance_wallet</span>
+    </div>
+    <div class="center-button cursor-pointer" onclick="window.location.href='index.html'">
+      <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center shadow-md">
+        <div class="w-8 h-8 bg-contain bg-center bg-no-repeat"
+            style="background-image: url('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20250127_191600_0000-6AwFlDvh6mQeKcJJwH3Jlyef5Qpeic.png')"></div>
+      </div>
+    </div>
+    <div class="nav-item cursor-pointer" onclick="window.location.href='academy.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">school</span>
+    </div>
+    <div class="nav-item cursor-pointer" onclick="window.location.href='settings.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">settings</span>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js";
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtNedkJo6ikNneZZdrheiWbE3Dn2B8kwQ",
+      authDomain: "ces-project-f8b4e.firebaseapp.com",
+      databaseURL: "https://ces-project-f8b4e-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "ces-project-f8b4e",
+      storageBucket: "ces-project-f8b4e.firebasestorage.app",
+      messagingSenderId: "580767851656",
+      appId: "1:580767851656:web:2c852e7edb81a6decdeb3d",
+      measurementId: "G-K73DSMWBTP"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    
+    // DOM elements
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const backBtn = document.getElementById('backBtn');
+    
+    // Show loading initially
+    loadingOverlay.classList.add('active');
+    
+    // Check authentication state
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is signed in
+        console.log("User is signed in:", user.uid);
+        // Hide loading
+        loadingOverlay.classList.remove('active');
+        
+        // Get app details from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const appId = urlParams.get('id');
+        const appName = urlParams.get('name');
+        const appIcon = urlParams.get('icon');
+        
+        if (appName) {
+          document.getElementById('appName').textContent = appName;
+          document.title = `Magnetar - ${appName}`;
+        }
+        
+        if (appIcon) {
+          document.getElementById('appIcon').textContent = appIcon;
+        }
+        
+        // You would typically fetch app details from a database
+        // This is a simplified example
+      } else {
+        // User is signed out, redirect to login
+        window.location.href = 'email-login.html';
+      }
+    });
+    
+    // Handle back button
+    backBtn.addEventListener('click', () => {
+      window.history.back();
+    });
+  </script>
+</body>
+</html>

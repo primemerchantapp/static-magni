@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Magnetar - Home</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#C00000">
+  <meta name="description" content="Magnetar - Your Dashboard">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Magnetar">
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --magnetar-red: #C00000;
+      --text-dark: #1A1A1A;
+    }
+
+    body {
+      font-family: 'Open Sans', sans-serif;
+      color: var(--text-dark);
+      background-color: #f5f5f5;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    h1, h2, h3, h4, h5, h6, .heading {
+      font-family: 'Roboto', sans-serif;
+    }
+
+    .btn-primary {
+      background-color: var(--magnetar-red);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    .btn-primary:hover, .btn-primary:active {
+      background-color: #A00000;
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:active {
+      transform: translateY(1px);
+    }
+
+    /* Loading animation */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+    .loading-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 3px solid rgba(192, 0, 0, 0.1);
+      border-top-color: var(--magnetar-red);
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Grid item animation */
+    .grid-item {
+      transition: all 0.3s ease;
+    }
+
+    .grid-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Bottom nav hover animation */
+    .nav-item {
+      transition: all 0.3s ease;
+    }
+
+    .nav-item:hover {
+      transform: translateY(-5px);
+    }
+
+    /* Center button styles */
+    .center-button {
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      transform: translateY(-10px);
+      transition: all 0.3s ease;
+    }
+
+    .center-button:hover {
+      transform: translateY(-15px);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+    }
+
+    /* Center button - invisible background */
+    .center-button-nav {
+      background-color: transparent !important; /* Make background invisible */
+      box-shadow: none; /* Remove shadow if any */
+      transform: translateY(-10px); /* Keep the translate Y */
+      transition: all 0.3s ease;
+    }
+
+    .center-button-nav:hover {
+      transform: translateY(-15px);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25); /* Keep shadow on hover if desired */
+    }
+
+    /* Header Logo and Text Styling */
+    .header-logo-container {
+      display: flex;
+      align-items: center;
+    }
+
+    .header-logo-text {
+      margin-left: 8px; /* Space between logo and text */
+    }
+
+    /* Header Icons Right Alignment */
+    .header-icons-right {
+      position: absolute;
+      right: 4px;
+      display: flex; /* To align icons horizontally */
+      gap: 16px; /* Space between icons */
+      align-items: center; /* Vertically align icons */
+    }
+
+    /* Increased Header Height */
+    header {
+      padding-top: 32px; /* Increased vertical padding (original p-4 = 16px, doubled = 32px) */
+      padding-bottom: 32px; /* Increased vertical padding */
+    }
+
+    /* Space after messenger icon - Increased value */
+    .header-messenger-icon {
+      margin-right: 0px; /* Increased margin-right for more space */
+    }
+  </style>
+  <script>
+    // Prevent zoom on double-tap
+    document.addEventListener('touchstart', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+
+    // Prevent zoom on pinch
+    document.addEventListener('touchmove', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+
+    // Prevent zoom on double-tap
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(event) {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, { passive: false });
+  </script>
+</head>
+
+<body class="bg-gray-100 flex flex-col mx-auto min-h-screen max-w-sm w-full">
+  <!-- Loading overlay -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <!-- Header -->
+  <header class="relative bg-white text-gray-800 text-lg font-semibold flex items-center justify-center sticky top-0 z-50 shadow-sm">
+    <!-- Header Logo and Text (Left) -->
+    <div class="absolute left-4 header-logo-container">
+      <div class="w-8 h-8 bg-no-repeat bg-center bg-contain"
+          style="background-image: url('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20250127_191600_0000-6AwFlDvh6mQeKcJJwH3Jlyef5Qpeic.png')"></div>
+      <span class="header-logo-text">MAGNETAR</span>
+    </div>
+    <!-- Center Title (Hidden, if not needed) -->
+    <div class="hidden">
+      <!-- If you still need a center title, put it here -->
+    </div>
+    <!-- Header Icons (Right) -->
+    <div class="header-icons-right">
+      <div class="cursor-pointer" onclick="handleNotificationClick()">
+        <span class="material-icons text-2xl text-gray-700">notifications</span>
+        <span id="notificationBadge"
+              class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 hidden">0</span>
+      </div>
+      <div class="cursor-pointer header-messenger-icon" onclick="handleMessageClick()">
+        <span class="material-icons text-2xl text-gray-700">email</span>
+        <span id="messageBadge"
+              class="absolute -top-2 -right-2 bg-blue-500 text-white text-xs rounded-full px-1.5 py-0.5 hidden">0</span>
+      </div>
+      <div class="mr-4"></div> <!-- Added extra spacing element -->
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col items-center p-4 w-full overflow-y-auto pb-24 space-y-4">
+    <!-- Wallet Balance Block -->
+    <div class="bg-white rounded-lg p-4 shadow w-full relative">
+      <div class="flex items-center justify-between mb-3">
+        <div id="userName" class="text-xs font-semibold text-gray-800">Loading Name...</div>
+        <div id="userMemberId" class="text-xs text-gray-500">Loading ID...</div>
+      </div>
+
+      <div class="flex items-center justify-between">
+        <div>
+          <div id="balanceAmount" class="text-2xl font-bold text-black">₱0</div>
+          <div class="text-sm text-gray-600">Available balance</div>
+        </div>
+        <span class="material-icons text-xl text-gray-500 cursor-pointer" id="toggleBalanceBtn">
+          visibility
+        </span>
+      </div>
+
+      <div class="flex space-x-4 w-full mt-3">
+        <button onclick="window.location.href='add-money.html'"
+          class="flex-1 bg-red-600 text-white py-2 rounded font-medium hover:bg-red-700 transition-colors">
+          Add Balance
+        </button>
+        <button onclick="window.location.href='withdraw.html'"
+          class="flex-1 bg-red-600 text-white py-2 rounded font-medium hover:bg-red-700 transition-colors">
+          Withdraw
+        </button>
+      </div>
+    </div>
+
+    <!-- Icons Grid - 8 Icons from Image -->
+    <div class="grid grid-cols-4 gap-3 w-full">
+      <div class="grid-item bg-white rounded-lg shadow flex flex-col items-center p-2 cursor-pointer"
+          onclick="window.location.href='persona.html'">
+        <span class="material-icons bg-gray-200 rounded-md w-8 h-8 flex items-center justify-center text-gray-700 mb-1 text-base" style="font-size: 1.2em">
+          psychology
+        </span>
+        <div class="text-[10px] font-semibold text-gray-600 text-center">Persona</div>
+      </div>
+      <div class="grid-item bg-white rounded-lg shadow flex flex-col items-center p-2 cursor-pointer"
+          onclick="window.location.href='apps.html'">
+        <span class="material-icons bg-gray-200 rounded-md w-8 h-8 flex items-center justify-center text-gray-700 mb-1 text-base" style="font-size: 1.2em">
+          grid_view
+        </span>
+        <div class="text-[10px] font-semibold text-gray-600 text-center">Apps</div>
+      </div>
+      <div class="grid-item bg-white rounded-lg shadow flex flex-col items-center p-2 cursor-pointer"
+          onclick="window.location.href='affiliate.html'">
+        <span class="material-icons bg-gray-200 rounded-md w-8 h-8 flex items-center justify-center text-gray-700 mb-1 text-base" style="font-size: 1.2em">
+          link
+        </span>
+        <div class="text-[10px] font-semibold text-gray-600 text-center">Affiliate</div>
+      </div>
+      <div class="grid-item bg-white rounded-lg shadow flex flex-col items-center p-2 cursor-pointer"
+          onclick="window.location.href='refer.html'">
+        <span class="material-icons bg-gray-200 rounded-md w-8 h-8 flex items-center justify-center text-gray-700 mb-1 text-base" style="font-size: 1.2em">
+          person_add
+        </span>
+        <div class="text-[10px] font-semibold text-gray-600 text-center">Refer</div>
+      </div>
+      <div class="grid-item bg-white rounded-lg shadow flex flex-col items-center p-2 cursor-pointer"
+          onclick="window.location.href='marketer.html'">
+        <span class="material-icons bg-gray-200 rounded-md w-8 h-8 flex items-center justify-center text-gray-700 mb-1 text-base" style="font-size: 1.2em">
+          notifications_active
+        </span>
+        <div class="text-[10px] font-semibold text-gray-600 text-center">Marketer</div>
+      </div>
+      <div class="grid-item bg-white rounded-lg shadow flex flex-col items-center p-2 cursor-pointer"
+          onclick="window.location.href='finance.html'">
+        <span class="material-icons bg-gray-200 rounded-md w-8 h-8 flex items-center justify-center text-gray-700 mb-1 text-base" style="font-size: 1.2em">
+          account_balance
+        </span>
+        <div class="text-[10px] font-semibold text-gray-600 text-center">Finance</div>
+      </div>
+       <div class="grid-item bg-white rounded-lg shadow flex flex-col items-center p-2 cursor-pointer"
+          onclick="window.location.href='course.html'">
+        <span class="material-icons bg-gray-200 rounded-md w-8 h-8 flex items-center justify-center text-gray-700 mb-1 text-base" style="font-size: 1.2em">
+          school
+        </span>
+        <div class="text-[10px] font-semibold text-gray-600 text-center">Course</div>
+      </div>
+      <div class="grid-item bg-white rounded-lg shadow flex flex-col items-center p-2 cursor-pointer"
+          onclick="window.location.href='media.html'">
+        <span class="material-icons bg-gray-200 rounded-md w-8 h-8 flex items-center justify-center text-gray-700 mb-1 text-base" style="font-size: 1.2em">
+          movie
+        </span>
+        <div class="text-[10px] font-semibold text-gray-600 text-center">Media</div>
+      </div>
+    </div>
+
+    <!-- Horizontal User List -->
+    <div class="bg-white rounded-lg shadow p-4 w-full mt-4 overflow-x-auto">
+      <h3 class="text-base font-semibold mb-3">Users</h3>
+      <div class="flex space-x-4 overflow-x-auto" id="userAvatarList">
+        <!-- Avatars will be dynamically populated from Firebase -->
+      </div>
+    </div>
+
+    <!-- Banner -->
+    <div class="bg-yellow-200 rounded-lg p-4 w-full mt-4 text-center">
+      Invite 2 new prospects get One Free Raffle coupon
+    </div>
+  </main>
+
+  <!-- Bottom Nav -->
+  <div class="bg-white border-t border-gray-300 w-full max-w-sm flex justify-around items-center py-2 fixed bottom-0 left-1/2 transform -translate-x-1/2">
+    <div class="nav-item cursor-pointer" onclick="window.location.href='social.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">people</span>
+    </div>
+    <div class="nav-item cursor-pointer" onclick="window.location.href='wallet.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">account_balance_wallet</span>
+    </div>
+    <div class="center-button-nav center-button cursor-pointer" onclick="window.location.href='index.html'">
+      <div class="w-12 h-12 rounded-full overflow-hidden bg-transparent flex items-center justify-center shadow-md">
+        <div class="w-8 h-8 bg-contain bg-center bg-no-repeat"
+             style="background-image: url('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20250127_191600_0000-6AwFlDvh6mQeKcJJwH3Jlyef5Qpeic.png')"></div>
+      </div>
+    </div>
+    <div class="nav-item cursor-pointer" onclick="window.location.href='academy.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">school</span>
+    </div>
+    <div class="nav-item cursor-pointer" onclick="window.location.href='settings.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">settings</span>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtNedkJo6ikNneZZdrheiWbE3Dn2B8kwQ",
+      authDomain: "ces-project-f8b4e.firebaseapp.com",
+      databaseURL: "https://ces-project-f8b4e-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "ces-project-f8b4e",
+      storageBucket: "ces-project-f8b4e.firebasestorage.app",
+      messagingSenderId: "580767851656",
+      appId: "1:580767851656:web:2c852e7edb81a6decdeb3d",
+      measurementId: "G-K73DSMWBTP"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const balanceAmount = document.getElementById('balanceAmount');
+    const userName = document.getElementById('userName');
+    const userMemberId = document.getElementById('userMemberId');
+    const toggleBalanceBtn = document.getElementById('toggleBalanceBtn');
+    const notificationBadge = document.getElementById('notificationBadge');
+    const messageBadge = document.getElementById('messageBadge');
+    const userAvatarList = document.getElementById('userAvatarList');
+
+    let currentUser = null;
+    let showBalance = true;
+    let currentBalance = 0;
+
+    loadingOverlay.classList.add('active');
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        await loadUserData();
+        await populateUserAvatarList();
+        loadingOverlay.classList.remove('active');
+      } else {
+        window.location.href = 'email-login.html';
+      }
+    });
+
+    async function loadUserData() {
+      try {
+        const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          userName.textContent = userData.displayName || currentUser.displayName || currentUser.email.split('@')[0];
+          userMemberId.textContent = `ID: ${userData.memberId || 'Not set'}`;
+          currentBalance = userData.balance || 0;
+          updateBalanceText();
+        }
+      } catch (error) {
+        console.error("Error loading user data:", error);
+      }
+    }
+
+    function updateBalanceText() {
+      if (showBalance) {
+        balanceAmount.textContent = `₱${currentBalance.toFixed(2)}`;
+        toggleBalanceBtn.innerHTML = '<span class="material-icons">visibility</span>';
+      } else {
+        balanceAmount.textContent = '₱••••••';
+        toggleBalanceBtn.innerHTML = '<span class="material-icons">visibility_off</span>';
+      }
+    }
+
+    toggleBalanceBtn.addEventListener('click', () => {
+      showBalance = !showBalance;
+      updateBalanceText();
+    });
+
+    // Populate the horizontal user avatar list dynamically from Firebase
+    async function populateUserAvatarList() {
+      try {
+        const usersRef = collection(db, "users");
+        const usersSnapshot = await getDocs(usersRef);
+        userAvatarList.innerHTML = "";
+        usersSnapshot.forEach(docSnap => {
+          const userData = docSnap.data();
+          const displayName = userData.displayName || "User";
+          const avatarUrl = userData.avatarUrl || "";
+
+          const container = document.createElement("div");
+          container.className = "flex flex-col items-center";
+
+          const avatar = document.createElement("div");
+          avatar.className = "w-12 h-12 rounded-full flex items-center justify-center text-white font-bold";
+
+          if (avatarUrl) {
+            avatar.style.backgroundImage = `url('${avatarUrl}')`;
+            avatar.style.backgroundSize = "cover";
+            avatar.style.backgroundPosition = "center";
+          } else {
+            avatar.textContent = getInitials(displayName);
+            avatar.style.backgroundColor = getRandomColor();
+          }
+
+          const nameSpan = document.createElement("span");
+          nameSpan.className = "text-xs mt-1";
+          nameSpan.textContent = displayName;
+
+          container.appendChild(avatar);
+          container.appendChild(nameSpan);
+          userAvatarList.appendChild(container);
+        });
+      } catch (error) {
+        console.error("Error populating user avatar list:", error);
+      }
+    }
+
+    // Helper function to get initials from a name
+    function getInitials(name) {
+      if (!name) return "";
+      const names = name.trim().split(" ");
+      let initials = names[0].charAt(0).toUpperCase();
+      if (names.length > 1) {
+        initials += names[1].charAt(0).toUpperCase();
+      }
+      return initials;
+    }
+
+    // Helper function to generate a random color
+    function getRandomColor() {
+      const colors = ['#4F46E5', '#10B981', '#EF4444', '#F59E0B', '#3B82F6', '#8B5CF6', '#F97316', '#EC4899'];
+      return colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    function updateNotificationBadge(count) {
+      if (count > 0) {
+        notificationBadge.textContent = count;
+        notificationBadge.classList.remove('hidden');
+      } else {
+        notificationBadge.classList.add('hidden');
+      }
+    }
+
+    function handleNotificationClick() {
+      window.location.href = 'notifications.html';
+    }
+
+    function handleMessageClick() {
+      window.location.href = 'messages.html'; // You'll need to create messages.html
+    }
+
+    function updateMessageBadge(count) {
+      if (count > 0) {
+        messageBadge.textContent = count;
+        messageBadge.classList.remove('hidden');
+      } else {
+        messageBadge.classList.add('hidden');
+      }
+    }
+
+    // Make these functions globally accessible
+    window.handleNotificationClick = handleNotificationClick;
+    window.handleMessageClick = handleMessageClick;
+  </script>
+</body>
+</html>

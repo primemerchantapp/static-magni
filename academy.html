@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Academy - Magma</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet">
+    <style>
+        * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    font-family: 'Open Sans', sans-serif;
+    background-color: #f8f9fa;
+    color: #333;
+    padding-bottom: 70px;
+    max-width: 100%;
+    overflow-x: hidden;
+    touch-action: pan-y;
+}
+
+h1, h2, h3, h4, h5, h6, .heading {
+    font-family: 'Roboto', sans-serif;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background-color: #ffffff;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.header-icons {
+    display: flex;
+    gap: 15px;
+}
+
+.header-icons i {
+    font-size: 1.2rem;
+    color: #555;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.header-icons i:hover {
+    color: #ff5722;
+}
+
+.featured-banner {
+    width: 100%;
+    height: 220px;
+    position: relative;
+    margin-bottom: 20px;
+    overflow: hidden;
+    border-radius: 0 0 20px 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.featured-banner:active {
+    transform: scale(0.98);
+}
+
+.featured-banner img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.featured-banner-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 25px 20px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+    color: white;
+}
+
+.featured-banner-content h2 {
+    font-size: 1.4rem;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.featured-banner-content p {
+    font-size: 0.95rem;
+    opacity: 0.9;
+}
+
+.category-filters {
+    display: flex;
+    gap: 10px;
+    padding: 10px 20px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    margin-bottom: 10px;
+}
+
+.category-filters::-webkit-scrollbar {
+    display: none;
+}
+
+.category-filter {
+    padding: 10px 18px;
+    background-color: #fff;
+    border-radius: 25px;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+    border: none;
+    color: #555;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.category-filter:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.category-filter.active {
+    background-color: #ff5722;
+    color: white;
+    font-weight: 500;
+}
+
+.courses-container {
+    padding: 10px 20px;
+}
+
+.section-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #333;
+    position: relative;
+    padding-left: 15px;
+}
+
+.section-title::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 5px;
+    background-color: #ff5722;
+    border-radius: 3px;
+}
+
+.courses-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.course-card {
+    background-color: #fff;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+}
+
+.course-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.course-card:active {
+    transform: scale(0.98);
+}
+
+.course-thumbnail {
+    position: relative;
+    height: 180px;
+    overflow: hidden;
+}
+
+.course-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.course-card:hover .course-thumbnail img {
+    transform: scale(1.05);
+}
+
+.course-icon {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background-color: rgba(255, 255, 255, 0.9);
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+}
+
+.course-icon i {
+    color: #ff5722;
+    font-size: 1.3rem;
+}
+
+.course-details {
+    padding: 20px;
+}
+
+.course-title {
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #333;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.4;
+}
+
+.course-author {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+}
+
+.course-author::before {
+    content: '\f007';
+    font-family: 'Font Awesome 5 Free';
+    margin-right: 8px;
+    color: #888;
+}
+
+.course-description {
+    font-size: 0.95rem;
+    color: #777;
+    margin-bottom: 20px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.5;
+}
+
+.course-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+    color: #888;
+    border-top: 1px solid #f0f0f0;
+    padding-top: 15px;
+}
+
+.course-date {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.watch-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #ff5722;
+    color: white;
+    padding: 10px 18px;
+    border-radius: 25px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 8px rgba(255, 87, 34, 0.3);
+}
+
+.watch-button:hover {
+    background-color: #e64a19;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 12px rgba(255, 87, 34, 0.4);
+}
+
+.watch-button:active {
+    transform: translateY(0);
+}
+
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: #ffffff;
+    display: flex;
+    justify-content: space-around;
+    padding: 12px 0 8px;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 0.75rem;
+    color: #777;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.nav-item span {
+    font-size: 1.5em;
+    margin-bottom: 4px;
+}
+
+.nav-item:hover {
+    transform: translateY(-5px);
+    color: #ff5722;
+}
+
+.nav-item.active {
+    color: #ff5722;
+}
+
+.center-button {
+    position: relative;
+    transform: translateY(-15px);
+    transition: all 0.3s ease;
+}
+
+.center-button:hover {
+    transform: translateY(-20px);
+}
+
+.center-button .center-icon {
+    width: 50px;
+    height: 50px;
+    background-color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.center-button .center-icon img {
+    width: 35px;
+    height: 35px;
+    object-fit: contain;
+}
+
+.video-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.9);
+    z-index: 1000;
+    flex-direction: column;
+}
+
+.video-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.video-player {
+    width: 100%;
+    max-height: 80vh;
+}
+
+.video-controls {
+    padding: 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #111;
+}
+
+.video-title {
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.close-video {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.loading-indicator {
+    display: none;
+    text-align: center;
+    padding: 30px;
+    color: #666;
+}
+
+.loading-indicator i {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+    animation: spin 1s infinite linear;
+    color: #ff5722;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.empty-state {
+    display: none;
+    text-align: center;
+    padding: 50px 20px;
+    color: #666;
+}
+
+.empty-state i {
+    font-size: 3.5rem;
+    margin-bottom: 20px;
+    color: #ddd;
+}
+
+.empty-state h3 {
+    font-size: 1.3rem;
+    margin-bottom: 15px;
+    color: #555;
+}
+
+.empty-state p {
+    font-size: 0.95rem;
+    max-width: 300px;
+    margin: 0 auto;
+    line-height: 1.5;
+}
+
+@media (min-width: 768px) {
+    .courses-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+    
+    .featured-banner {
+        height: 300px;
+    }
+}
+
+@media (min-width: 1024px) {
+    .courses-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Academy</h1>
+        <div class="header-icons">
+            <i class="fas fa-search"></i>
+            <i class="fas fa-bell"></i>
+        </div>
+    </div>
+    
+    <div id="featuredBanner" class="featured-banner">
+        <!-- Featured banner content will be inserted here -->
+    </div>
+    
+    <div class="category-filters">
+        <button class="category-filter active">All</button>
+        <button class="category-filter">Marketing</button>
+        <button class="category-filter">Success</button>
+        <button class="category-filter">Financial</button>
+        <button class="category-filter">Recognition</button>
+        <button class="category-filter">Orientation</button>
+    </div>
+    
+    <div class="courses-container">
+        <h2 class="section-title">All Courses</h2>
+        <div id="coursesGrid" class="courses-grid">
+            <!-- Course cards will be inserted here -->
+        </div>
+        
+        <div class="loading-indicator" id="loadingIndicator">
+            <i class="fas fa-spinner"></i>
+            <p>Loading courses...</p>
+        </div>
+        
+        <div class="empty-state" id="emptyState">
+            <i class="fas fa-video-slash"></i>
+            <h3>No courses found</h3>
+            <p>There are no courses available in this category. Please check back later.</p>
+        </div>
+    </div>
+    
+    <div class="video-modal" id="videoModal">
+        <div class="video-container">
+            <video id="videoPlayer" class="video-player" controls></video>
+        </div>
+        <div class="video-controls">
+            <div class="video-title" id="videoTitle">Video Title</div>
+            <button class="close-video" id="closeVideo">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+    
+    <div class="bottom-nav">
+    <div class="nav-item" onclick="window.location.href='social.html'">
+        <span class="material-icons">people</span>
+        <span>Social</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='wallet.html'">
+        <span class="material-icons">account_balance_wallet</span>
+        <span>Wallet</span>
+    </div>
+    <div class="center-button" onclick="window.location.href='index.html'">
+        <div class="center-icon">
+            <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20250127_191600_0000-6AwFlDvh6mQeKcJJwH3Jlyef5Qpeic.png" alt="Logo">
+        </div>
+    </div>
+    <div class="nav-item active">
+        <span class="material-icons">school</span>
+        <span>Academy</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='settings.html'">
+        <span class="material-icons">settings</span>
+        <span>Settings</span>
+    </div>
+</div>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script>
+        // Initialize Firebase with your config
+        const firebaseConfig = {
+            apiKey: "AIzaSyDiEpH2Mh_BKbCxkrXnZxWGPnzndPEz8zg",
+            authDomain: "ces-project-f8b4e.firebaseapp.com",
+            projectId: "ces-project-f8b4e",
+            storageBucket: "ces-project-f8b4e.appspot.com",
+            messagingSenderId: "456811518432",
+            appId: "1:456811518432:web:e4f5a9e6c2a152bb7c9977",
+            measurementId: "G-RLNBFCV0Q3"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        
+        // Use the provided course data directly
+        const coursesData = {
+          "-OL81xNAbgzqrKSm3_Al": {
+            "active": false,
+            "author": "Genesis THE MAGNETAR Domingo",
+            "created_at": "2025-03-12T22:29:52.665Z",
+            "description": "Learn to the 1st step how to earn in our Digital Marketing",
+            "image_thumbnail": "https://firebasestorage.googleapis.com/v0/b/ces-project-f8b4e.firebasestorage.app/o/thumbnail%2F1741815464732_Ghen%20Posters%20ghen%20-%20ALL%20POSTERS%20-%20No%20Dates%20(32).png?alt=media&token=d1e742dd-9ae3-41ca-bb04-d661f650920c",
+            "title": "Team Magnetar New Distributor Orientation Part 1",
+            "video_url": "https://firebasestorage.googleapis.com/v0/b/ces-project-f8b4e.firebasestorage.app/o/course-video%2F1741815464732_NDO%201%20feb%2015%202025%20lowe%20resolution.mp4?alt=media&token=b7a719d0-305b-4d23-afef-bce66b2ef29a"
+          },
+          "-OL8FskF3YPH5141HQ_A": {
+            "active": false,
+            "author": "By: Genesis THE MAGNETAR Domingo",
+            "created_at": "2025-03-12T23:30:43.811Z",
+            "description": "Learn to the 1st step how to earn in our Digital Marketing",
+            "image_thumbnail": "https://firebasestorage.googleapis.com/v0/b/ces-project-f8b4e.firebasestorage.app/o/thumbnail%2F1741821058591_Ghen%20Posters%20ghen%20-%20ALL%20POSTERS%20-%20No%20Dates%20(1).png?alt=media&token=fd9b07a2-964b-4421-b77e-74bac5249a9f",
+            "title": "Team Magnetar New Distributor Orientation Part 2",
+            "video_url": "https://firebasestorage.googleapis.com/v0/b/ces-project-f8b4e.firebasestorage.app/o/course-video%2F1741821058591_NDO%202%20feb%2017%202025.mp4?alt=media&token=df400e53-0cf0-4371-a28d-26246dac2f71"
+          },
+          "-OL8JmD5n5OxC3SSN2qx": {
+            "active": false,
+            "author": "LAW OF ATTRACTION",
+            "created_at": "2025-03-12T23:47:45.625Z",
+            "description": "Learn how to use the secret of  Power of law of Attraction",
+            "image_thumbnail": "https://firebasestorage.googleapis.com/v0/b/ces-project-f8b4e.firebasestorage.app/o/thumbnail%2F1741823165095_th.jpg?alt=media&token=d489064c-0408-4eec-b029-d2048bab1a5a",
+            "title": "The Secret The Law of Attraction",
+            "video_url": "https://firebasestorage.googleapis.com/v0/b/ces-project-f8b4e.firebasestorage.app/o/course-video%2F1741823165095_thesecret.mp4?alt=media&token=3585fcd5-44a3-4d3d-8d38-0cba40cd6229"
+          },
+          "-OL8STXWltha_Q5WHfOw": {
+            "active": false,
+            "author": "By: Genesis THE MAGNETAR Domingo",
+            "created_at": "2025-03-13T00:25:44.308Z",
+            "description": "Learn the Basic Online Marketing how to start and become expert in Digital Marketing",
+            "image_thumbnail": "https://firebasestorage.googleapis.com/v0/b/ces-project-f8b4e.firebasestorage.app/o/thumbnail%2F1741824221766_Ghen%20Posters%20ghen%20-%20ALL%20POSTERS%20-%20No%20Dates%20(11).png?alt=media&token=ccc7465e-aa5a-40bf-90a6-9b8d77f59f60",
+            "title": "BASIC ONLINE MARKETING",
+            "video_url": "https://firebasestorage.googleapis.com/v0/b/ces-project-f8b4e.firebasestorage.app/o/course-video%2F1741824221766_BASIC%20ONLINE%20MARKETING%20feb%2010%202025.mp4?alt=media&token=c65c0b63-082a-4951-bf5a-01eb409cac06"
+          },
+          "-OL8ngf-LdpZfO5lanZx": {
+            "active": false,
+            "author": "Genesis THE MAGNETAR Domingo",
+            "created_at": "2025-03-13T02:02:49.363Z",
+            "description": "Awarding nights for the Top Performer of Team Magnetar (STARMATES)",
+            "image_thumbnail": "https://firebasestorage.googleapis.com/v0/b/ces-project-f8b4e.firebasestorage.app/o/thumbnail%2F1741827786977_1.)%20%20December%202022%20-%20MAGNETAR%20Top%20Performers%20(26).png?alt=media&token=e303d019-06e1-48b2-965c-588e22ce478c",
+            "title": "January Team Magnetar Recognition of Stars ",
+            "video_url": "https://firebasestorage.googleapis.com/v0/b/ces-project-f8b4e.firebasestorage.app/o/course-video%2F1741827786977_Team%20MagnetarJanuary%20Top%20Performer.mp4?alt=media&token=83d4d6ab-cb4f-4ebf-9148-97ef4f4dbb49"
+          },
+          "-OL8yA9dDmLBC6E1mpVh": {
+            "active": false,
+            "author": "By: Genesis THE \"MAGNETAR\" Domingo",
+            "created_at": "2025-03-13T02:48:35.709Z",
+            "description": "Awarding nights for the Top Performer of Team Magnetar (STARMATES)",
+            "image_thumbnail": "https://firebasestorage.googleapis.com/v0/b/ces-project-f8b4e.firebasestorage.app/o/thumbnail%2F1741833484654_1.)%20%20December%202022%20-%20MAGNETAR%20Top%20Performers%20(77).png?alt=media&token=f7e3efe5-f821-4821-9847-de65af41c22e",
+            "title": "February Team Magnetar Recognition of Stars",
+            "video_url": "https://firebasestorage.googleapis.com/v0/b/ces-project-f8b4e.firebasestorage.app/o/course-video%2F1741833484654_february%20recognition%20of%20stars.mp4?alt=media&token=36ff987f-1cad-441e-af76-81adc6bb6f8c"
+          },
+          "-OLZoZu3-pwG7FyWdJL6": {
+            "active": false,
+            "author": "By: Genesis THE MAGNETAR Domingo",
+            "created_at": "2025-03-18T07:56:21.249Z",
+            "description": "Learn the Principle's of the Successful people ",
+            "image_thumbnail": "https://firebasestorage.googleapis.com/v0/b/ces-project-f8b4e.firebasestorage.app/o/thumbnail%2F1742284135356_Ghen%20Posters%20ghen%20-%20ALL%20POSTERS%20-%20No%20Dates%20(32).png?alt=media&token=5ac57967-d8e8-467c-8402-06de8480e78c",
+            "title": "Principles of Success",
+            "video_url": "https://firebasestorage.googleapis.com/v0/b/ces-project-f8b4e.firebasestorage.app/o/course-video%2F1742284135356_prinsiple%20of%20success.mp4?alt=media&token=e9f11302-c948-4ef9-bc5d-c200fdf34f7e"
+          },
+          "-OLZuBI4wpTZzRfb7DmO": {
+            "active": false,
+            "author": "By: Genesis THE MAGNETAR Domingo",
+            "created_at": "2025-03-18T08:20:53.314Z",
+            "description": "Learn the financial literacy and how to maximized your income potential.",
+            "image_thumbnail": "https://firebasestorage.googleapis.com/v0/b/ces-project-f8b4e.firebasestorage.app/o/thumbnail%2F1742284880955_Ghen%20Posters%20ghen%20-%20ALL%20POSTERS%20-%20No%20Dates%20(52).png?alt=media&token=db112526-cae2-4675-9bac-9f671c5cc721",
+            "title": "Maximizing your Income Potential",
+            "video_url": "https://firebasestorage.googleapis.com/v0/b/ces-project-f8b4e.firebasestorage.app/o/course-video%2F1742284880955_maximizing%20your%20income%20potential%20Introduction.mp4?alt=media&token=0840ebb4-f57b-460e-8e88-bf205e4016ad"
+          }
+        };
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Prevent zooming on mobile devices
+            document.addEventListener('touchmove', function(event) {
+                if (event.scale !== 1) {
+                    event.preventDefault();
+                }
+            }, { passive: false });
+            
+            const coursesGrid = document.getElementById('coursesGrid');
+            const featuredBanner = document.getElementById('featuredBanner');
+            const videoModal = document.getElementById('videoModal');
+            const videoPlayer = document.getElementById('videoPlayer');
+            const videoTitle = document.getElementById('videoTitle');
+            const closeVideo = document.getElementById('closeVideo');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const emptyState = document.getElementById('emptyState');
+            const categoryFilters = document.querySelectorAll('.category-filter');
+            
+            // Show loading indicator
+            loadingIndicator.style.display = 'block';
+            
+            // Process and display courses
+            function displayCourses(courses) {
+                // Hide loading indicator
+                loadingIndicator.style.display = 'none';
+                
+                // Clear existing courses
+                coursesGrid.innerHTML = '';
+                
+                // Check if there are courses to display
+                if (Object.keys(courses).length === 0) {
+                    emptyState.style.display = 'block';
+                    return;
+                }
+                
+                emptyState.style.display = 'none';
+                
+                // Convert object to array and sort by created_at (newest first)
+                const coursesArray = Object.entries(courses).map(([id, course]) => {
+                    return { id, ...course };
+                }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                
+                // Set featured banner (newest course)
+                const featuredCourse = coursesArray[0];
+featuredBanner.innerHTML = `
+    <img src="${featuredCourse.image_thumbnail}" alt="${featuredCourse.title}">
+    <div class="featured-banner-content">
+        <h2>${featuredCourse.title}</h2>
+        <p>${featuredCourse.author}</p>
+        <div class="watch-now-hint" style="margin-top: 10px; font-size: 0.9rem; display: flex; align-items: center; gap: 5px;">
+            <i class="fas fa-play-circle"></i> Tap to watch
+        </div>
+    </div>
+`;
+                
+                // Add click event to featured banner
+                featuredBanner.addEventListener('click', function() {
+                    openVideoPlayer(featuredCourse.video_url, featuredCourse.title);
+                });
+                
+                // Display all courses
+                coursesArray.forEach(course => {
+                    const courseDate = new Date(course.created_at);
+                    const formattedDate = `${courseDate.getDate()}/${courseDate.getMonth() + 1}/${courseDate.getFullYear()}`;
+                    
+                    // Determine icon based on course title/category
+                    let iconClass = 'fas fa-video';
+                    if (course.title.toLowerCase().includes('marketing')) {
+                        iconClass = 'fas fa-bullhorn';
+                    } else if (course.title.toLowerCase().includes('orientation')) {
+                        iconClass = 'fas fa-compass';
+                    } else if (course.title.toLowerCase().includes('recognition') || course.title.toLowerCase().includes('stars')) {
+                        iconClass = 'fas fa-award';
+                    } else if (course.title.toLowerCase().includes('success') || course.title.toLowerCase().includes('principles')) {
+                        iconClass = 'fas fa-trophy';
+                    } else if (course.title.toLowerCase().includes('income') || course.title.toLowerCase().includes('financial')) {
+                        iconClass = 'fas fa-money-bill-wave';
+                    }
+                    
+                    const courseCard = document.createElement('div');
+                    courseCard.className = 'course-card';
+                    courseCard.innerHTML = `
+        <div class="course-thumbnail">
+            <img src="${course.image_thumbnail}" alt="${course.title}">
+            <div class="course-icon">
+                <i class="${iconClass}"></i>
+            </div>
+        </div>
+        <div class="course-details">
+            <h3 class="course-title">${course.title}</h3>
+            <p class="course-author">${course.author}</p>
+            <p class="course-description">${course.description}</p>
+            <div class="course-meta">
+                <div class="course-date">
+                    <i class="far fa-calendar-alt"></i>
+                    <span>${formattedDate}</span>
+                </div>
+                <button class="watch-button">
+                    <i class="fas fa-play"></i>
+                    Watch
+                </button>
+            </div>
+        </div>
+    `;
+                    
+                    courseCard.addEventListener('click', function() {
+                        openVideoPlayer(course.video_url, course.title);
+                    });
+                    
+                    coursesGrid.appendChild(courseCard);
+                });
+            }
+            
+            // Function to open video player
+            function openVideoPlayer(videoUrl, title) {
+                videoPlayer.src = videoUrl;
+                videoTitle.textContent = title;
+                videoModal.style.display = 'flex';
+                videoPlayer.play();
+            }
+            
+            // Close video player
+            closeVideo.addEventListener('click', function() {
+                videoPlayer.pause();
+                videoPlayer.src = '';
+                videoModal.style.display = 'none';
+            });
+            
+            // Filter courses by category
+            categoryFilters.forEach(filter => {
+                filter.addEventListener('click', function() {
+                    // Update active state
+                    categoryFilters.forEach(f => f.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const category = this.textContent.toLowerCase();
+                    
+                    if (category === 'all') {
+                        displayCourses(coursesData);
+                        return;
+                    }
+                    
+                    // Filter courses based on category
+                    const filteredCourses = {};
+                    Object.entries(coursesData).forEach(([id, course]) => {
+                        // Check if course title or description contains the category
+                        if (
+                            course.title.toLowerCase().includes(category) || 
+                            course.description.toLowerCase().includes(category)
+                        ) {
+                            filteredCourses[id] = course;
+                        }
+                    });
+                    
+                    displayCourses(filteredCourses);
+                });
+            });
+            
+            // Initial display of courses
+            displayCourses(coursesData);
+        });
+    </script>
+</body>
+</html>

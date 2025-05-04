@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Magnetar - Payment Successful</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#C00000">
+  <meta name="description" content="Magnetar - Payment Successful">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Magnetar">
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --magnetar-red: #C00000;
+      --text-dark: #1A1A1A;
+      --maya-blue: #00A1DF;
+    }
+    
+    body {
+      font-family: 'Open Sans', sans-serif;
+      color: var(--text-dark);
+      background-color: #f7f7f7;
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior: none;
+    }
+    
+    h1, h2, h3, h4, h5, h6, .heading {
+      font-family: 'Roboto', sans-serif;
+    }
+    
+    .btn-primary {
+      background-color: var(--magnetar-red);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    .btn-primary:hover, .btn-primary:active {
+      background-color: #A00000;
+      transform: translateY(-1px);
+    }
+    
+    .btn-primary:active {
+      transform: translateY(1px);
+    }
+    
+    .card {
+      background-color: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    /* Page transition animation */
+    .page-transition {
+      animation: fadeIn 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Success animation */
+    .success-checkmark {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto;
+      position: relative;
+    }
+    
+    .success-checkmark .check-icon {
+      width: 80px;
+      height: 80px;
+      position: relative;
+      border-radius: 50%;
+      box-sizing: content-box;
+      border: 4px solid #4CAF50;
+    }
+    
+    .success-checkmark .check-icon::before {
+      top: 3px;
+      left: -2px;
+      width: 30px;
+      transform-origin: 100% 50%;
+      border-radius: 100px 0 0 100px;
+    }
+    
+    .success-checkmark .check-icon::after {
+      top: 0;
+      left: 30px;
+      width: 60px;
+      transform-origin: 0 50%;
+      border-radius: 0 100px 100px 0;
+      animation: rotate-circle 4.25s ease-in;
+    }
+    
+    .success-checkmark .check-icon::before, .success-checkmark .check-icon::after {
+      content: '';
+      height: 100px;
+      position: absolute;
+      background: #FFFFFF;
+      transform: rotate(-45deg);
+    }
+    
+    .success-checkmark .check-icon .icon-line {
+      height: 5px;
+      background-color: #4CAF50;
+      display: block;
+      border-radius: 2px;
+      position: absolute;
+      z-index: 10;
+    }
+    
+    .success-checkmark .check-icon .icon-line.line-tip {
+      top: 46px;
+      left: 14px;
+      width: 25px;
+      transform: rotate(45deg);
+      animation: icon-line-tip 0.75s;
+    }
+    
+    .success-checkmark .check-icon .icon-line.line-long {
+      top: 38px;
+      right: 8px;
+      width: 47px;
+      transform: rotate(-45deg);
+      animation: icon-line-long 0.75s;
+    }
+    
+    .success-checkmark .check-icon .icon-circle {
+      top: -4px;
+      left: -4px;
+      z-index: 10;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      position: absolute;
+      box-sizing: content-box;
+      border: 4px solid rgba(76, 175, 80, 0.5);
+    }
+    
+    .success-checkmark .check-icon .icon-fix {
+      top: 8px;
+      width: 5px;
+      left: 26px;
+      z-index: 1;
+      height: 85px;
+      position: absolute;
+      transform: rotate(-45deg);
+      background-color: #FFFFFF;
+    }
+    
+    @keyframes rotate-circle {
+      0% {
+        transform: rotate(-45deg);
+      }
+      5% {
+        transform: rotate(-45deg);
+      }
+      12% {
+        transform: rotate(-405deg);
+      }
+      100% {
+        transform: rotate(-405deg);
+      }
+    }
+    
+    @keyframes icon-line-tip {
+      0% {
+        width: 0;
+        left: 1px;
+        top: 19px;
+      }
+      54% {
+        width: 0;
+        left: 1px;
+        top: 19px;
+      }
+      70% {
+        width: 50px;
+        left: -8px;
+        top: 37px;
+      }
+      84% {
+        width: 17px;
+        left: 21px;
+        top: 48px;
+      }
+      100% {
+        width: 25px;
+        left: 14px;
+        top: 46px;
+      }
+    }
+    
+    @keyframes icon-line-long {
+      0% {
+        width: 0;
+        right: 46px;
+        top: 54px;
+      }
+      65% {
+        width: 0;
+        right: 46px;
+        top: 54px;
+      }
+      84% {
+        width: 55px;
+        right: 0px;
+        top: 35px;
+      }
+      100% {
+        width: 47px;
+        right: 8px;
+        top: 38px;
+      }
+    }
+    
+    /* Prevent zoom */
+    * {
+      touch-action: manipulation;
+    }
+    
+    html, body {
+      overflow-x: hidden;
+      max-width: 100%;
+      touch-action: pan-y;
+    }
+  </style>
+  <!-- Firebase SDKs (v9 modular) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, updateDoc, addDoc, collection, query, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js";
+    
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtNedkJo6ikNneZZdrheiWbE3Dn2B8kwQ",
+      authDomain: "ces-project-f8b4e.firebaseapp.com",
+      databaseURL: "https://ces-project-f8b4e-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "ces-project-f8b4e",
+      storageBucket: "ces-project-f8b4e.firebasestorage.app",
+      messagingSenderId: "580767851656",
+      appId: "1:580767851656:web:2c852e7edb81a6decdeb3d",
+      measurementId: "G-K73DSMWBTP"
+    };
+    
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    
+    // Function to process successful payment
+    async function processSuccessfulPayment() {
+      try {
+        const user = auth.currentUser;
+        if (!user) {
+          console.error("User not authenticated");
+          return;
+        }
+        
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const checkoutId = urlParams.get('checkoutId');
+        const referenceNumber = urlParams.get('referenceNumber');
+        
+        if (!checkoutId && !referenceNumber) {
+          console.error("Missing checkout information");
+          return;
+        }
+        
+        // Find the checkout record
+        const checkoutsRef = collection(db, "maya_checkouts");
+        let checkoutQuery;
+        
+        if (checkoutId) {
+          checkoutQuery = query(checkoutsRef, where("checkoutId", "==", checkoutId));
+        } else {
+          checkoutQuery = query(checkoutsRef, where("requestReferenceNumber", "==", referenceNumber));
+        }
+        
+        const checkoutSnapshot = await getDocs(checkoutQuery);
+        
+        if (checkoutSnapshot.empty) {
+          console.error("Checkout record not found");
+          return;
+        }
+        
+        const checkoutDoc = checkoutSnapshot.docs[0];
+        const checkoutData = checkoutDoc.data();
+        
+        // Check if payment was already processed
+        if (checkoutData.status === "completed") {
+          console.log("Payment was already processed");
+          return;
+        }
+        
+        // Get user data
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        const userData = userDoc.data();
+        
+        if (!userData) {
+          console.error("User data not found");
+          return;
+        }
+        
+        // Update wallet balance
+        const currentBalance = userData.walletBalance || 0;
+        const newBalance = currentBalance + checkoutData.amount;
+        
+        await updateDoc(doc(db, "users", user.uid), {
+          walletBalance: newBalance
+        });
+        
+        // Update checkout status
+        await updateDoc(doc(db, "maya_checkouts", checkoutDoc.id), {
+          status: "completed",
+          completedAt: serverTimestamp()
+        });
+        
+        // Add transaction record
+        await addDoc(collection(db, "transactions"), {
+          userId: user.uid,
+          type: "deposit",
+          amount: checkoutData.amount,
+          method: "maya",
+          status: "completed",
+          checkoutId: checkoutData.checkoutId,
+          referenceNumber: checkoutData.requestReferenceNumber,
+          timestamp: serverTimestamp()
+        });
+        
+        // Update UI
+        document.getElementById('amount').textContent = `₱${checkoutData.amount.toFixed(2)}`;
+        document.getElementById('wallet-balance').textContent = `₱${newBalance.toFixed(2)}`;
+        
+      } catch (error) {
+        console.error("Error processing payment:", error);
+      }
+    }
+    
+    // Check authentication state
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        processSuccessfulPayment();
+      } else {
+        window.location.href = 'email-login.html';
+      }
+    });
+  </script>
+  <script>
+    // Add page transition animation
+    document.addEventListener('DOMContentLoaded', function() {
+      document.body.classList.add('page-transition');
+    });
+    
+    // Prevent zoom on double-tap
+    document.addEventListener('touchstart', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Prevent zoom on pinch
+    document.addEventListener('touchmove', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Prevent zoom on double-tap
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(event) {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, { passive: false });
+    
+    // Redirect to wallet page after 5 seconds
+    setTimeout(function() {
+      window.location.href = 'wallet.html';
+    }, 5000);
+  </script>
+</head>
+
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
+  <div class="card p-8 w-full max-w-md text-center">
+    <div class="success-checkmark mb-6">
+      <div class="check-icon">
+        <span class="icon-line line-tip"></span>
+        <span class="icon-line line-long"></span>
+        <span class="icon-circle"></span>
+        <span class="icon-fix"></span>
+      </div>
+    </div>
+    
+    <h1 class="text-2xl font-bold text-green-600 mb-2">Payment Successful!</h1>
+    <p class="text-gray-600 mb-6">Your payment has been processed successfully.</p>
+    
+    <div class="bg-gray-50 p-4 rounded-lg mb-6">
+      <p class="text-gray-600 mb-2">Amount Added:</p>
+      <p id="amount" class="text-2xl font-bold">₱0.00</p>
+      <p class="text-gray-600 mt-4 mb-2">New Wallet Balance:</p>
+      <p id="wallet-balance" class="text-2xl font-bold">₱0.00</p>
+    </div>
+    
+    <p class="text-sm text-gray-500 mb-6">You will be redirected to your wallet in 5 seconds...</p>
+    
+    <a href="wallet.html" class="block w-full py-3 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors">
+      Go to Wallet
+    </a>
+  </div>
+</body>
+</html>

@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Magnetar - Course Details</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#C00000">
+  <meta name="description" content="Magnetar - Course Details">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Magnetar">
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --magnetar-red: #C00000;
+      --text-dark: #1A1A1A;
+    }
+    
+    body {
+      font-family: 'Open Sans', sans-serif;
+      color: var(--text-dark);
+      background-color: #f7f7f7;
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior: none;
+    }
+    
+    h1, h2, h3, h4, h5, h6, .heading {
+      font-family: 'Roboto', sans-serif;
+    }
+    
+    .btn-primary {
+      background-color: var(--magnetar-red);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    .btn-primary:hover, .btn-primary:active {
+      background-color: #A00000;
+      transform: translateY(-1px);
+    }
+    
+    .btn-primary:active {
+      transform: translateY(1px);
+    }
+    
+    /* Custom input styles */
+    input, textarea, select {
+      background-color: #f5f5f5 !important;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    input:focus, textarea:focus, select:focus {
+      outline: none !important;
+      background-color: #f0f0f0 !important;
+      box-shadow: 0 0 0 2px rgba(192, 0, 0, 0.2) !important;
+    }
+    
+    .card {
+      background-color: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    .card:hover {
+      box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+      transform: translateY(-3px);
+    }
+    
+    /* Page transition animation */
+    .page-transition {
+      animation: fadeIn 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Loading animation */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    
+    .loading-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 3px solid rgba(192, 0, 0, 0.1);
+      border-top-color: var(--magnetar-red);
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Video item */
+    .video-item {
+      border-left: 3px solid transparent;
+      transition: all 0.2s ease;
+    }
+    
+    .video-item:hover {
+      background-color: #f9f9f9;
+      border-left-color: var(--magnetar-red);
+    }
+    
+    .video-item.active {
+      background-color: #f5f5f5;
+      border-left-color: var(--magnetar-red);
+    }
+    
+    /* Prevent zoom */
+    * {
+      touch-action: manipulation;
+    }
+    
+    html, body {
+      overflow-x: hidden;
+      max-width: 100%;
+      touch-action: pan-y;
+    }
+  </style>
+  <!-- Firebase SDKs (v9 modular) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js";
+    
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtNedkJo6ikNneZZdrheiWbE3Dn2B8kwQ",
+      authDomain: "ces-project-f8b4e.firebaseapp.com",
+      databaseURL: "https://ces-project-f8b4e-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "ces-project-f8b4e",
+      storageBucket: "ces-project-f8b4e.firebasestorage.app",
+      messagingSenderId: "580767851656",
+      appId: "1:580767851656:web:2c852e7edb81a6decdeb3d",
+      measurementId: "G-K73DSMWBTP"
+    };
+    
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    
+    // Get course ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const courseId = urlParams.get('id') || 'default-course';
+    
+    // Function to load course data
+    async function loadCourseData() {
+      const loadingOverlay = document.getElementById('loading-overlay');
+      
+      try {
+        loadingOverlay.classList.add('active');
+        
+        const user = auth.currentUser;
+        if (!user) {
+          window.location.href = 'email-login.html';
+          return;
+        }
+        
+        // Get course data
+        const courseDoc = await getDoc(doc(db, "courses", courseId));
+        
+        if (!courseDoc.exists()) {
+          console.error("Course not found");
+          document.getElementById('error-message').textContent = "Course not found";
+          document.getElementById('error-message').classList.remove('hidden');
+          return;
+        }
+        
+        const courseData = courseDoc.data();
+        
+        // Update UI with course data
+        document.getElementById('course-title').textContent = courseData.title;
+        document.getElementById('course-description').textContent = courseData.description;
+        document.getElementById('instructor-name').textContent = courseData.instructor || 'Magnetar Academy';
+        document.getElementById('course-duration').textContent = courseData.duration || '2 hours';
+        document.getElementById('video-count').textContent = courseData.videos ? courseData.videos.length : 0;
+        
+        // Update course image if available
+        if (courseData.imageUrl) {
+          document.getElementById('course-image').src = courseData.imageUrl;
+        }
+        
+        // Populate videos list
+        const videosContainer = document.getElementById('videos-container');
+        videosContainer.innerHTML = '';
+        
+        if (courseData.videos && courseData.videos.length > 0) {
+          courseData.videos.forEach((video, index) => {
+            const videoItem = document.createElement('div');
+            videoItem.className = 'video-item p-4 flex items-start cursor-pointer';
+            if (index === 0) videoItem.classList.add('active');
+            
+            videoItem.innerHTML = `
+              <div class="flex-shrink-0 bg-gray-100 rounded-full p-2 mr-3">
+                <span class="material-icons text-gray-600">${video.completed ? 'check_circle' : 'play_circle_outline'}</span>
+              </div>
+              <div class="flex-1">
+                <h3 class="font-medium">${video.title}</h3>
+                <p class="text-sm text-gray-500">${video.duration || '10 min'}</p>
+              </div>
+              <div class="flex-shrink-0 ml-2">
+                ${video.completed ? 
+                  '<span class="inline-block px-2 py-1 text-xs bg-green-100 text-green-800 rounded">Completed</span>' : 
+                  '<span class="inline-block px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded">Not Started</span>'}
+              </div>
+            `;
+            
+            videoItem.addEventListener('click', () => {
+              // Mark all videos as inactive
+              document.querySelectorAll('.video-item').forEach(item => {
+                item.classList.remove('active');
+              });
+              
+              // Mark this video as active
+              videoItem.classList.add('active');
+              
+              // Update video player
+              document.getElementById('video-title').textContent = video.title;
+              document.getElementById('video-player').src = video.url || 'https://www.youtube.com/embed/dQw4w9WgXcQ';
+              
+              // Mark video as watched in Firestore
+              markVideoAsWatched(video.id);
+            });
+            
+            videosContainer.appendChild(videoItem);
+          });
+          
+          // Set first video as active by default
+          if (courseData.videos[0]) {
+            document.getElementById('video-title').textContent = courseData.videos[0].title;
+            document.getElementById('video-player').src = courseData.videos[0].url || 'https://www.youtube.com/embed/dQw4w9WgXcQ';
+          }
+        } else {
+          videosContainer.innerHTML = `
+            <div class="text-center p-8 text-gray-500">
+              <p>No videos available for this course yet.</p>
+            </div>
+          `;
+        }
+        
+      } catch (error) {
+        console.error("Error loading course data:", error);
+        document.getElementById('error-message').textContent = error.message;
+        document.getElementById('error-message').classList.remove('hidden');
+      } finally {
+        loadingOverlay.classList.remove('active');
+      }
+    }
+    
+    // Function to mark video as watched
+    async function markVideoAsWatched(videoId) {
+      try {
+        const user = auth.currentUser;
+        if (!user) return;
+        
+        // Update user's progress
+        await updateDoc(doc(db, "users", user.uid), {
+          [`courseProgress.${courseId}.watchedVideos`]: arrayUnion(videoId)
+        });
+        
+      } catch (error) {
+        console.error("Error marking video as watched:", error);
+      }
+    }
+    
+    // Check authentication state
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        loadCourseData();
+      } else {
+        window.location.href = 'email-login.html';
+      }
+    });
+  </script>
+  <script>
+    // Add page transition animation
+    document.addEventListener('DOMContentLoaded', function() {
+      document.body.classList.add('page-transition');
+    });
+    
+    // Prevent zoom on double-tap
+    document.addEventListener('touchstart', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Prevent zoom on pinch
+    document.addEventListener('touchmove', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Prevent zoom on double-tap
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(event) {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, { passive: false });
+  </script>
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+  <!-- Loading overlay -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="loading-spinner"></div>
+  </div>
+  
+  <!-- Header -->
+  <header class="bg-white shadow-sm p-4 flex items-center justify-between sticky top-0 z-10">
+    <a href="academy.html" class="flex items-center">
+      <span class="material-icons text-gray-600 mr-2">arrow_back</span>
+      <h1 class="text-xl font-bold">Course Details</h1>
+    </a>
+    <div class="flex space-x-2">
+      <a href="marketplace.html" class="p-2 rounded-full hover:bg-gray-100">
+        <span class="material-icons text-gray-600">shopping_cart</span>
+      </a>
+    </div>
+  </header>
+  
+  <main class="container mx-auto px-4 py-6 pb-20 max-w-4xl">
+    <!-- Error message -->
+    <div id="error-message" class="bg-red-100 text-red-700 p-4 rounded-lg mb-6 hidden"></div>
+    
+    <!-- Course Header -->
+    <div class="card p-6 mb-6">
+      <div class="flex flex-col md:flex-row">
+        <div class="md:w-1/3 mb-4 md:mb-0 md:mr-6">
+          <img id="course-image" src="/placeholder.svg?height=200&width=300" alt="Course Thumbnail" class="w-full h-48 object-cover rounded-lg">
+        </div>
+        <div class="md:w-2/3">
+          <h2 id="course-title" class="text-2xl font-bold mb-2">Loading Course...</h2>
+          <p id="course-description" class="text-gray-600 mb-4">Loading course description...</p>
+          
+          <div class="flex flex-wrap gap-4 mb-4">
+            <div class="flex items-center">
+              <span class="material-icons text-gray-500 mr-1">person</span>
+              <span id="instructor-name" class="text-sm">Instructor</span>
+            </div>
+            <div class="flex items-center">
+              <span class="material-icons text-gray-500 mr-1">schedule</span>
+              <span id="course-duration" class="text-sm">Duration</span>
+            </div>
+            <div class="flex items-center">
+              <span class="material-icons text-gray-500 mr-1">video_library</span>
+              <span id="video-count" class="text-sm">0</span> <span class="text-sm ml-1">videos</span>
+            </div>
+          </div>
+          
+          <div class="flex space-x-2">
+            <a href="marketplace.html" class="flex items-center justify-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+              <span class="material-icons mr-1">shopping_cart</span>
+              <span>Shop More Courses</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Video Player and List -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- Video Player -->
+      <div class="md:col-span-2">
+        <div class="card p-4 mb-6">
+          <h3 id="video-title" class="font-bold mb-3">Loading video...</h3>
+          <div class="relative pb-[56.25%] h-0 overflow-hidden rounded-lg">
+            <iframe id="video-player" class="absolute top-0 left-0 w-full h-full" src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Video List -->
+      <div class="md:col-span-1">
+        <div class="card overflow-hidden">
+          <div class="p-4 bg-gray-50 border-b border-gray-200">
+            <h3 class="font-bold">Course Content</h3>
+          </div>
+          <div id="videos-container" class="max-h-[500px] overflow-y-auto">
+            <!-- Videos will be populated here -->
+            <div class="animate-pulse p-4">
+              <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+              <div class="h-3 bg-gray-100 rounded w-1/2"></div>
+            </div>
+            <div class="animate-pulse p-4">
+              <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+              <div class="h-3 bg-gray-100 rounded w-1/2"></div>
+            </div>
+            <div class="animate-pulse p-4">
+              <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+              <div class="h-3 bg-gray-100 rounded w-1/2"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
+          console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        }, function(err) {
+          console.log('ServiceWorker registration failed: ', err);
+        });
+      });
+    }
+  </script>
+</body>
+</html>

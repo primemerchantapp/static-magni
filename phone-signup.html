@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Magnetar - Phone Sign Up</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#C00000">
+  <meta name="description" content="Magnetar - Phone Sign Up">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Magnetar">
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+  <style>
+    :root {
+      --magnetar-red: #C00000;
+      --text-dark: #1A1A1A;
+    }
+    
+    body {
+      font-family: 'Open Sans', sans-serif;
+      color: var(--text-dark);
+      background-color: white;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    h1, h2, h3, h4, h5, h6, .heading {
+      font-family: 'Roboto', sans-serif;
+    }
+    
+    .btn-primary {
+      background-color: var(--magnetar-red);
+      transition: all 0.2s ease;
+    }
+    
+    .btn-primary:hover, .btn-primary:active {
+      background-color: #A00000;
+      transform: translateY(-1px);
+    }
+    
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+    
+    /* Remove clipboard border */
+    input, textarea, select {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--magnetar-red);
+      box-shadow: 0 0 0 1px rgba(192, 0, 0, 0.2);
+    }
+    
+    .loading {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(255, 255, 255, 0.9);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+    
+    .loading.active {
+      display: flex;
+    }
+    
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 3px solid rgba(192, 0, 0, 0.1);
+      border-top-color: var(--magnetar-red);
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Loading dots animation */
+    .loading-dots {
+      display: inline-flex;
+      align-items: center;
+      height: 20px;
+    }
+    
+    .loading-dots span {
+      width: 6px;
+      height: 6px;
+      margin: 0 2px;
+      background-color: white;
+      border-radius: 50%;
+      display: inline-block;
+      animation: dot-pulse 1.4s infinite ease-in-out both;
+    }
+    
+    .loading-dots span:nth-child(1) {
+      animation-delay: -0.32s;
+    }
+    
+    .loading-dots span:nth-child(2) {
+      animation-delay: -0.16s;
+    }
+    
+    @keyframes dot-pulse {
+      0%, 80%, 100% { 
+        transform: scale(0);
+      }
+      40% { 
+        transform: scale(1);
+      }
+    }
+    
+    /* Ripple effect for buttons */
+    .ripple {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .ripple:after {
+      content: "";
+      display: block;
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      background-image: radial-gradient(circle, #fff 10%, transparent 10.01%);
+      background-repeat: no-repeat;
+      background-position: 50%;
+      transform: scale(10, 10);
+      opacity: 0;
+      transition: transform .5s, opacity 1s;
+    }
+    
+    .ripple:active:after {
+      transform: scale(0, 0);
+      opacity: .3;
+      transition: 0s;
+    }
+    
+    /* OTP input styling */
+    .otp-input {
+      letter-spacing: 0.5em;
+      text-align: center;
+    }
+  </style>
+  <script>
+    // Prevent zoom on double-tap
+    document.addEventListener('touchstart', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Prevent zoom on pinch
+    document.addEventListener('touchmove', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Prevent zoom on double-tap
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(event) {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, { passive: false });
+  </script>
+</head>
+
+<body class="bg-white min-h-screen flex flex-col">
+  <!-- Loading overlay -->
+  <div id="loading" class="loading">
+    <div class="spinner mb-4"></div>
+    <p class="text-gray-700" id="loading-text">Sending OTP...</p>
+  </div>
+  
+  <main class="flex-grow flex items-center justify-center p-6">
+    <div class="w-full max-w-sm">
+      <div class="text-center mb-8">
+        <img 
+          src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20250127_191600_0000-6AwFlDvh6mQeKcJJwH3Jlyef5Qpeic.png" 
+          alt="Magnetar Logo" 
+          class="w-20 h-20 mx-auto mb-4"
+        />
+        <h2 class="text-2xl font-bold">Create Account</h2>
+      </div>
+      
+      <!-- Hidden recaptcha container -->
+      <div id="recaptcha-container"></div>
+      
+      <div id="error-message" class="bg-red-100 text-red-700 p-3 rounded-lg mb-4 text-sm hidden"></div>
+      
+      <div class="bg-white rounded-lg p-6 w-full space-y-4">
+        <form id="phone-form">
+          <label class="block">
+            <span class="text-sm font-medium text-gray-700">Phone Number (with country code)</span>
+            <input
+              id="phone"
+              type="tel"
+              class="mt-1 block w-full border border-gray-300 rounded-lg p-3 text-base"
+              placeholder="+63xxxxxxxxxx"
+              required
+            />
+          </label>
+          
+          <label class="block mt-3">
+            <span class="text-sm font-medium text-gray-700">Member ID</span>
+            <input
+              id="memberId"
+              type="text"
+              class="mt-1 block w-full border border-gray-300 rounded-lg p-3 text-base"
+              placeholder="e.g. MBR456"
+              required
+            />
+          </label>
+          
+          <button
+            type="submit"
+            id="send-otp-btn"
+            class="w-full btn-primary text-white p-3 rounded-lg ripple flex items-center justify-center h-12 mt-4"
+          >
+            <span id="send-otp-text">Send OTP</span>
+            <div id="send-otp-loading" class="loading-dots hidden">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </button>
+        </form>
+        
+        <form id="otp-form" class="hidden">
+          <label class="block">
+            <span class="text-sm font-medium text-gray-700">Enter OTP</span>
+            <input
+              id="otp"
+              type="text"
+              class="mt-1 block w-full border border-gray-300 rounded-lg p-3 text-base otp-input"
+              placeholder="• • • • • •"
+              maxlength="6"
+              pattern="[0-9]*"
+              inputmode="numeric"
+              required
+            />
+          </label>
+          <button
+            type="submit"
+            id="verify-otp-btn"
+            class="w-full btn-primary text-white p-3 rounded-lg ripple flex items-center justify-center h-12 mt-4"
+          >
+            <span id="verify-otp-text">Verify OTP</span>
+            <div id="verify-otp-loading" class="loading-dots hidden">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </button>
+        </form>
+        
+        <div class="text-center mt-4">
+          Already have an account?
+          <a href="phone-login.html" class="text-red-600 font-medium transition-colors duration-200 hover:text-red-700">Login here</a>
+        </div>
+        <div class="text-center mt-2">
+          Prefer email signup?
+          <a href="email-signup.html" class="text-red-600 font-medium transition-colors duration-200 hover:text-red-700">Sign up with email</a>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
+          console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        }, function(err) {
+          console.log('ServiceWorker registration failed: ', err);
+        });
+      });
+    }
+    
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtNedkJo6ikNneZZdrheiWbE3Dn2B8kwQ",
+      authDomain: "ces-project-f8b4e.firebaseapp.com",
+      databaseURL: "https://ces-project-f8b4e-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "ces-project-f8b4e",
+      storageBucket: "ces-project-f8b4e.firebasestorage.app",
+      messagingSenderId: "580767851656",
+      appId: "1:580767851656:web:2c852e7edb81a6decdeb3d",
+      measurementId: "G-K73DSMWBTP"
+    };
+    
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    
+    // Get elements
+    const loadingElement = document.getElementById('loading');
+    const loadingText = document.getElementById('loading-text');
+    const phoneForm = document.getElementById('phone-form');
+    const otpForm = document.getElementById('otp-form');
+    const errorElement = document.getElementById('error-message');
+    const sendOtpBtn = document.getElementById('send-otp-btn');
+    const sendOtpText = document.getElementById('send-otp-text');
+    const sendOtpLoading = document.getElementById('send-otp-loading');
+    const verifyOtpBtn = document.getElementById('verify-otp-btn');
+    const verifyOtpText = document.getElementById('verify-otp-text');
+    const verifyOtpLoading = document.getElementById('verify-otp-loading');
+    
+    let confirmationResultGlobal = null;
+    
+    // Handle phone form submission
+    phoneForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      // Show button loading
+      sendOtpBtn.disabled = true;
+      sendOtpText.classList.add('hidden');
+      sendOtpLoading.classList.remove('hidden');
+      errorElement.classList.add('hidden');
+      
+      const phoneNumber = document.getElementById('phone').value;
+      
+      try {
+        // Show full page loading
+        loadingText.textContent = "Sending OTP...";
+        loadingElement.classList.add('active');
+        
+        // Initialize reCAPTCHA verifier
+        window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+          'size': 'invisible',
+          'callback': (response) => {
+            // reCAPTCHA solved, allow signInWithPhoneNumber.
+            console.log('reCAPTCHA verified');
+          }
+        });
+        
+        // Send OTP
+        const confirmationResult = await firebase.auth().signInWithPhoneNumber(
+          phoneNumber, 
+          window.recaptchaVerifier
+        );
+        
+        // Store confirmation result globally
+        confirmationResultGlobal = confirmationResult;
+        
+        // Hide loading
+        loadingElement.classList.remove('active');
+        
+        // Hide phone form and show OTP form
+        phoneForm.classList.add('hidden');
+        otpForm.classList.remove('hidden');
+        
+        // Reset button state
+        sendOtpBtn.disabled = false;
+        sendOtpText.classList.remove('hidden');
+        sendOtpLoading.classList.add('hidden');
+        
+      } catch (error) {
+        // Hide loading
+        loadingElement.classList.remove('active');
+        
+        // Reset button state
+        sendOtpBtn.disabled = false;
+        sendOtpText.classList.remove('hidden');
+        sendOtpLoading.classList.add('hidden');
+        
+        // Show error
+        errorElement.textContent = error.message;
+        errorElement.classList.remove('hidden');
+        console.error('Error sending OTP:', error);
+        
+        // Reset reCAPTCHA
+        if (window.recaptchaVerifier) {
+          window.recaptchaVerifier.clear();
+          window.recaptchaVerifier = null;
+        }
+      }
+    });
+    
+    // Handle OTP form submission
+    otpForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      // Show button loading
+      verifyOtpBtn.disabled = true;
+      verifyOtpText.classList.add('hidden');
+      verifyOtpLoading.classList.remove('hidden');
+      errorElement.classList.add('hidden');
+      
+      const otpCode = document.getElementById('otp').value;
+      const memberId = document.getElementById('memberId').value;
+      
+      try {
+        if (!confirmationResultGlobal) {
+          throw new Error('OTP not sent. Please try again.');
+        }
+        
+        // Show full page loading
+        loadingText.textContent = "Creating your account...";
+        loadingElement.classList.add('active');
+        
+        // Verify OTP
+        const result = await confirmationResultGlobal.confirm(otpCode);
+        const user = result.user;
+        
+        // Store user data in Firestore
+        await firebase.firestore().collection('users').doc(user.uid).set({
+          phoneNumber: user.phoneNumber,
+          memberId: memberId,
+          createdAt: new Date().toISOString(),
+          appName: "magnetar"
+        });
+        
+        // Store user ID in localStorage for persistence
+        localStorage.setItem('magnetarUserId', user.uid);
+        
+        // Redirect to profile creation page
+        window.location.href = 'create-profile.html';
+        
+      } catch (error) {
+        // Hide loading
+        loadingElement.classList.remove('active');
+        
+        // Reset button state
+        verifyOtpBtn.disabled = false;
+        verifyOtpText.classList.remove('hidden');
+        verifyOtpLoading.classList.add('hidden');
+        
+        // Show error
+        errorElement.textContent = error.message;
+        errorElement.classList.remove('hidden');
+        console.error('Error verifying OTP:', error);
+      }
+    });
+  </script>
+</body>
+</html>

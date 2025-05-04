@@ -1,0 +1,63 @@
+<!-- 
+MAIN HEADER TEMPLATE
+This is a reference file for the standard header and navbar for main pages
+-->
+
+<!-- Header (for main pages) -->
+<header class="bg-white shadow-sm p-4 flex items-center justify-between sticky top-0 z-10">
+  <div class="flex items-center">
+    <img 
+      src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20250127_191600_0000-6AwFlDvh6mQeKcJJwH3Jlyef5Qpeic.png" 
+      alt="Magnetar Logo" 
+      class="w-8 h-8 mr-2"
+    />
+    <h1 class="text-xl font-bold">Magnetar</h1>
+  </div>
+  <div class="flex space-x-2">
+    <button class="p-2 rounded-full hover:bg-gray-100">
+      <span class="material-icons text-gray-600">notifications</span>
+    </button>
+    <button class="p-2 rounded-full hover:bg-gray-100">
+      <span class="material-icons text-gray-600">settings</span>
+    </button>
+  </div>
+</header>
+
+<!-- Bottom Navigation (for main pages only) -->
+<nav class="fixed bottom-0 w-full bg-white border-t border-gray-200 pt-2 pb-safe z-10">
+  <div class="flex justify-around items-center">
+    <a href="dashboard.html" class="flex flex-col items-center p-2 text-gray-600">
+      <span class="material-icons">home</span>
+      <span class="text-xs mt-1">Home</span>
+    </a>
+    <a href="marketplace.html" class="flex flex-col items-center p-2 text-gray-600">
+      <span class="material-icons">storefront</span>
+      <span class="text-xs mt-1">Market</span>
+    </a>
+    <a href="apps.html" class="flex flex-col items-center p-2 text-gray-600">
+      <span class="material-icons">apps</span>
+      <span class="text-xs mt-1">Apps</span>
+    </a>
+    <a href="network.html" class="flex flex-col items-center p-2 text-gray-600">
+      <span class="material-icons">group</span>
+      <span class="text-xs mt-1">Network</span>
+    </a>
+    <a href="profile.html" class="flex flex-col items-center p-2 text-gray-600">
+      <span class="material-icons">person</span>
+      <span class="text-xs mt-1">Profile</span>
+    </a>
+  </div>
+</nav>
+
+<!-- Secondary Page Header Template (for non-main pages) -->
+<header class="bg-white shadow-sm p-4 flex items-center justify-between sticky top-0 z-10">
+  <a href="javascript:history.back()" class="flex items-center">
+    <span class="material-icons text-gray-600 mr-2">arrow_back</span>
+    <h1 class="text-xl font-bold">Page Title</h1>
+  </a>
+  <div class="flex space-x-2">
+    <button class="p-2 rounded-full hover:bg-gray-100">
+      <span class="material-icons text-gray-600">help_outline</span>
+    </button>
+  </div>
+</header>

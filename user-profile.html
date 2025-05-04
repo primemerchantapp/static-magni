@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile | Magnetar</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="header-left">
+                <a href="javascript:history.back()" class="back-button">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <h1>Profile</h1>
+            </div>
+            <div class="header-right">
+                <button id="moreOptionsBtn" class="icon-button">
+                    <i class="fas fa-ellipsis-v"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main>
+            <div class="profile-container">
+                <div class="profile-header">
+                    <div class="profile-avatar" id="profileAvatar">
+                        <!-- Initials will be inserted here by JS -->
+                    </div>
+                    <div class="profile-actions">
+                        <button class="follow-btn" id="followButton">
+                            <i class="fas fa-user-plus"></i> Follow
+                        </button>
+                        <button class="message-btn">
+                            <i class="fas fa-envelope"></i> Message
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="profile-info">
+                    <h2 id="profileName">Loading...</h2>
+                    <p id="profileBio" class="profile-bio">Loading...</p>
+                </div>
+
+                <div class="profile-stats">
+                    <div class="stat-item">
+                        <span class="stat-number" id="postsCount">0</span>
+                        <span class="stat-label">Posts</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="followersCount">0</span>
+                        <span class="stat-label">Followers</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="followingCount">0</span>
+                        <span class="stat-label">Following</span>
+                    </div>
+                </div>
+
+                <div class="profile-tabs">
+                    <button class="tab-button active" data-tab="posts">Posts</button>
+                    <button class="tab-button" data-tab="media">Media</button>
+                </div>
+
+                <div class="profile-content">
+                    <div class="tab-content active" id="posts-content">
+                        <div class="posts-container" id="userPosts">
+                            <!-- User posts will be loaded here -->
+                            <div class="loading-spinner">
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-content" id="media-content">
+                        <div class="media-grid" id="userMedia">
+                            <!-- User media will be loaded here -->
+                            <div class="loading-spinner">
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Navigation -->
+        <nav>
+            <a href="index.html" class="nav-item">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+            <a href="social.html" class="nav-item">
+                <i class="fas fa-users"></i>
+                <span>Social</span>
+            </a>
+            <a href="academy.html" class="nav-item">
+                <i class="fas fa-graduation-cap"></i>
+                <span>Academy</span>
+            </a>
+            <a href="tools.html" class="nav-item">
+                <i class="fas fa-tools"></i>
+                <span>Tools</span>
+            </a>
+            <a href="profile.html" class="nav-item">
+                <i class="fas fa-user"></i>
+                <span>Profile</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- Options Modal -->
+    <div class="modal" id="optionsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Options</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="options-list">
+                    <button class="option-item" id="reportUserBtn">
+                        <i class="fas fa-flag"></i> Report User
+                    </button>
+                    <button class="option-item" id="blockUserBtn">
+                        <i class="fas fa-ban"></i> Block User
+                    </button>
+                    <button class="option-item" id="shareProfileBtn">
+                        <i class="fas fa-share-alt"></i> Share Profile
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script>
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        
+        // DOM Elements
+        const profileAvatar = document.getElementById('profileAvatar');
+        const profileName = document.getElementById('profileName');
+        const profileBio = document.getElementById('profileBio');
+        const postsCount = document.getElementById('postsCount');
+        const followersCount = document.getElementById('followersCount');
+        const followingCount = document.getElementById('followingCount');
+        const userPosts = document.getElementById('userPosts');
+        const userMedia = document.getElementById('userMedia');
+        const followButton = document.getElementById('followButton');
+        const moreOptionsBtn = document.getElementById('moreOptionsBtn');
+        const optionsModal = document.getElementById('optionsModal');
+        const closeModalBtn = document.querySelector('.close-modal');
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        // Get user ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('id');
+        
+        if (!userId) {
+            window.location.href = 'index.html';
+        }
+        
+        // Check if current user is logged in
+        auth.onAuthStateChanged(currentUser => {
+            if (currentUser) {
+                loadUserProfile(userId, currentUser.uid);
+                loadUserPosts(userId);
+                loadUserMedia(userId);
+                checkFollowStatus(userId, currentUser.uid);
+            } else {
+                window.location.href = 'login.html';
+            }
+        });
+        
+        // Load user profile data
+        function loadUserProfile(userId, currentUserId) {
+            db.collection('users').doc(userId).get()
+                .then(doc => {
+                    if (doc.exists) {
+                        const userData = doc.data();
+                        
+                        // Set profile name
+                        profileName.textContent = userData.displayName || 'User';
+                        document.title = `${userData.displayName || 'User'} | Magnetar`;
+                        
+                        // Set profile bio if exists
+                        if (userData.bio) {
+                            profileBio.textContent = userData.bio;
+                        } else {
+                            profileBio.textContent = 'No bio available';
+                        }
+                        
+                        // Set profile avatar
+                        if (userData.photoURL) {
+                            profileAvatar.innerHTML = `<img src="${userData.photoURL}" alt="Profile Picture">`;
+                        } else {
+                            const initials = (userData.displayName || 'User')
+                                .split(' ')
+                                .map(name => name.charAt(0))
+                                .join('')
+                                .toUpperCase();
+                            
+                            profileAvatar.textContent = initials;
+                            profileAvatar.style.backgroundColor = getRandomColor(userId);
+                        }
+                        
+                        // Set stats
+                        if (userData.stats) {
+                            postsCount.textContent = userData.stats.posts || 0;
+                            followersCount.textContent = userData.stats.followers || 0;
+                            followingCount.textContent = userData.stats.following || 0;
+                        }
+                        
+                        // Hide follow button if viewing own profile
+                        if (userId === currentUserId) {
+                            document.querySelector('.profile-actions').innerHTML = `
+                                <button class="edit-profile-btn" onclick="window.location.href='profile.html'">
+                                    <i class="fas fa-user-edit"></i> Edit Profile
+                                </button>
+                            `;
+                        }
+                    } else {
+                        // User not found
+                        profileName.textContent = 'User not found';
+                        profileBio.textContent = 'This user does not exist or has been deleted.';
+                        document.querySelector('.profile-actions').style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading user profile:', error);
+                    profileName.textContent = 'Error';
+                    profileBio.textContent = 'Failed to load user profile.';
+                });
+        }
+        
+        // Check if current user is following the profile user
+        function checkFollowStatus(userId, currentUserId) {
+            if (userId === currentUserId) return;
+            
+            db.collection('users').doc(currentUserId)
+                .collection('following').doc(userId).get()
+                .then(doc => {
+                    if (doc.exists) {
+                        // User is already following
+                        followButton.innerHTML = '<i class="fas fa-user-check"></i> Following';
+                        followButton.classList.add('following');
+                    } else {
+                        // User is not following
+                        followButton.innerHTML = '<i class="fas fa-user-plus"></i> Follow';
+                        followButton.classList.remove('following');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking follow status:', error);
+                });
+        }
+        
+        // Toggle follow status
+        followButton.addEventListener('click', () => {
+            const currentUserId = auth.currentUser.uid;
+            
+            if (userId === currentUserId) return;
+            
+            const isFollowing = followButton.classList.contains('following');
+            
+            // References
+            const followingRef = db.collection('users').doc(currentUserId)
+                .collection('following').doc(userId);
+            const followersRef = db.collection('users').doc(userId)
+                .collection('followers').doc(currentUserId);
+            const userRef = db.collection('users').doc(userId);
+            const currentUserRef = db.collection('users').doc(currentUserId);
+            
+            // Disable button during operation
+            followButton.disabled = true;
+            
+            if (isFollowing) {
+                // Unfollow
+                db.runTransaction(transaction => {
+                    return Promise.all([
+                        transaction.get(userRef),
+                        transaction.get(currentUserRef)
+                    ]).then(([userDoc, currentUserDoc]) => {
+                        // Get current stats
+                        const userData = userDoc.data() || {};
+                        const currentUserData = currentUserDoc.data() || {};
+                        
+                        const userStats = userData.stats || { followers: 0 };
+                        const currentUserStats = currentUserData.stats || { following: 0 };
+                        
+                        // Update stats
+                        const newUserStats = {
+                            ...userStats,
+                            followers: Math.max(0, (userStats.followers || 0) - 1)
+                        };
+                        
+                        const newCurrentUserStats = {
+                            ...currentUserStats,
+                            following: Math.max(0, (currentUserStats.following || 0) - 1)
+                        };
+                        
+                        // Delete follow records
+                        transaction.delete(followingRef);
+                        transaction.delete(followersRef);
+                        
+                        // Update stats
+                        transaction.update(userRef, { stats: newUserStats });
+                        transaction.update(currentUserRef, { stats: newCurrentUserStats });
+                    });
+                })
+                .then(() => {
+                    // Update UI
+                    followButton.innerHTML = '<i class="fas fa-user-plus"></i> Follow';
+                    followButton.classList.remove('following');
+                    
+                    // Update follower count
+                    const count = parseInt(followersCount.textContent) || 0;
+                    followersCount.textContent = Math.max(0, count - 1);
+                })
+                .catch(error => {
+                    console.error('Error unfollowing user:', error);
+                    alert('Failed to unfollow user. Please try again.');
+                })
+                .finally(() => {
+                    followButton.disabled = false;
+                });
+            } else {
+                // Follow
+                db.runTransaction(transaction => {
+                    return Promise.all([
+                        transaction.get(userRef),
+                        transaction.get(currentUserRef)
+                    ]).then(([userDoc, currentUserDoc]) => {
+                        // Get current stats
+                        const userData = userDoc.data() || {};
+                        const currentUserData = currentUserDoc.data() || {};
+                        
+                        const userStats = userData.stats || { followers: 0 };
+                        const currentUserStats = currentUserData.stats || { following: 0 };
+                        
+                        // Update stats
+                        const newUserStats = {
+                            ...userStats,
+                            followers: (userStats.followers || 0) + 1
+                        };
+                        
+                        const newCurrentUserStats = {
+                            ...currentUserStats,
+                            following: (currentUserStats.following || 0) + 1
+                        };
+                        
+                        // Create follow records
+                        transaction.set(followingRef, {
+                            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        
+                        transaction.set(followersRef, {
+                            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        
+                        // Update stats
+                        transaction.update(userRef, { stats: newUserStats });
+                        transaction.update(currentUserRef, { stats: newCurrentUserStats });
+                    });
+                })
+                .then(() => {
+                    // Update UI
+                    followButton.innerHTML = '<i class="fas fa-user-check"></i> Following';
+                    followButton.classList.add('following');
+                    
+                    // Update follower count
+                    const count = parseInt(followersCount.textContent) || 0;
+                    followersCount.textContent = count + 1;
+                })
+                .catch(error => {
+                    console.error('Error following user:', error);
+                    alert('Failed to follow user. Please try again.');
+                })
+                .finally(() => {
+                    followButton.disabled = false;
+                });
+            }
+        });
+        
+        // Load user posts
+        function loadUserPosts(userId) {
+            userPosts.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>';
+            
+            db.collection('posts')
+                .where('userId', '==', userId)
+                .orderBy('timestamp', 'desc')
+                .limit(10)
+                .get()
+                .then(snapshot => {
+                    userPosts.innerHTML = '';
+                    
+                    if (snapshot.empty) {
+                        userPosts.innerHTML = '<div class="empty-state">No posts yet</div>';
+                        return;
+                    }
+                    
+                    snapshot.forEach(doc => {
+                        const post = doc.data();
+                        const postElement = createPostElement(post, doc.id);
+                        userPosts.appendChild(postElement);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading user posts:', error);
+                    userPosts.innerHTML = '<div class="error-state">Failed to load posts</div>';
+                });
+        }
+        
+        // Load user media (posts with images or videos)
+        function loadUserMedia(userId) {
+            userMedia.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>';
+            
+            db.collection('posts')
+                .where('userId', '==', userId)
+                .where('hasMedia', '==', true)
+                .orderBy('timestamp', 'desc')
+                .limit(20)
+                .get()
+                .then(snapshot => {
+                    userMedia.innerHTML = '';
+                    
+                    if (snapshot.empty) {
+                        userMedia.innerHTML = '<div class="empty-state">No media yet</div>';
+                        return;
+                    }
+                    
+                    snapshot.forEach(doc => {
+                        const post = doc.data();
+                        const mediaItem = document.createElement('div');
+                        mediaItem.className = 'media-item';
+                        
+                        if (post.image) {
+                            mediaItem.innerHTML = `<img src="${post.image}" alt="Post image">`;
+                        } else if (post.video) {
+                            mediaItem.innerHTML = `
+                                <div class="video-thumbnail">
+                                    <img src="${post.videoThumbnail || '/placeholder.svg?height=200&width=200'}" alt="Video thumbnail">
+                                    <div class="play-icon"><i class="fas fa-play"></i></div>
+                                </div>
+                            `;
+                        }
+                        
+                        mediaItem.addEventListener('click', () => {
+                            // Open media in modal or redirect to post
+                            window.location.href = `post.html?id=${doc.id}`;
+                        });
+                        
+                        userMedia.appendChild(mediaItem);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading user media:', error);
+                    userMedia.innerHTML = '<div class="error-state">Failed to load media</div>';
+                });
+        }
+        
+        // Create post element
+        function createPostElement(post, postId) {
+            const postElement = document.createElement('div');
+            postElement.className = 'post';
+            postElement.dataset.id = postId;
+            
+            const userInitials = post.userInitials || (post.user ? post.user.initials : '');
+            const userName = post.userDisplayName || (post.user ? post.user.name : 'User');
+            const postUserId = post.userId || (post.user ? post.user.uid : '');
+            const timestamp = post.timestamp ? new Date(post.timestamp.seconds * 1000) : new Date();
+            const timeAgo = getTimeAgo(timestamp);
+            
+            let mediaHtml = '';
+            if (post.image) {
+                mediaHtml = `<div class="post-image"><img src="${post.image}" alt="Post image"></div>`;
+            } else if (post.video) {
+                mediaHtml = `
+                    <div class="post-video">
+                        <video controls>
+                            <source src="${post.video}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
+                `;
+            }
+            
+            postElement.innerHTML = `
+                <div class="post-header">
+                    <div class="post-user">
+                        <div class="user-avatar" style="background-color: ${getRandomColor(postUserId)}">${userInitials}</div>
+                        <div class="user-info">
+                            <div class="user-name">${userName}</div>
+                            <div class="post-time">${timeAgo}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="post-content">
+                    <p>${post.content || ''}</p>
+                    ${mediaHtml}
+                </div>
+                <div class="post-actions">
+                    <button class="action-button like-button ${post.liked ? 'liked' : ''}">
+                        <i class="fas fa-heart"></i>
+                        <span>${post.likes || 0}</span>
+                    </button>
+                    <button class="action-button comment-button">
+                        <i class="fas fa-comment"></i>
+                        <span>${post.comments ? (Array.isArray(post.comments) ? post.comments.length : post.comments) : 0}</span>
+                    </button>
+                    <button class="action-button share-button">
+                        <i class="fas fa-share"></i>
+                    </button>
+                </div>
+            `;
+            
+            // Add event listeners for post actions
+            const likeButton = postElement.querySelector('.like-button');
+            likeButton.addEventListener('click', () => {
+                toggleLike(postId, likeButton);
+            });
+            
+            return postElement;
+        }
+        
+        // Toggle like on a post
+        function toggleLike(postId, button) {
+            const currentUserId = auth.currentUser.uid;
+            const likeRef = db.collection('users').doc(currentUserId).collection('likes').doc(postId);
+            const postRef = db.collection('posts').doc(postId);
+            
+            db.runTransaction(transaction => {
+                return transaction.get(likeRef).then(likeDoc => {
+                    return transaction.get(postRef).then(postDoc => {
+                        if (!postDoc.exists) {
+                            throw "Post does not exist!";
+                        }
+                        
+                        const postData = postDoc.data();
+                        const currentLikes = postData.likes || 0;
+                        
+                        if (likeDoc.exists) {
+                            // User already liked the post, so unlike it
+                            transaction.delete(likeRef);
+                            transaction.update(postRef, { likes: currentLikes - 1 });
+                            button.classList.remove('liked');
+                            button.querySelector('span').textContent = currentLikes - 1;
+                        } else {
+                            // User hasn't liked the post, so like it
+                            transaction.set(likeRef, { 
+                                timestamp: firebase.firestore.FieldValue.serverTimestamp() 
+                            });
+                            transaction.update(postRef, { likes: currentLikes + 1 });
+                            button.classList.add('liked');
+                            button.querySelector('span').textContent = currentLikes + 1;
+                        }
+                    });
+                });
+            }).catch(error => {
+                console.error("Error toggling like:", error);
+            });
+        }
+        
+        // Get random color based on user ID
+        function getRandomColor(userId) {
+            const colors = [
+                '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA5A5', '#A5FFD6',
+                '#FFC145', '#FF6B8B', '#C04CFD', '#47C1FF', '#FFD166'
+            ];
+            
+            // Use the user ID to deterministically select a color
+            let hash = 0;
+            for (let i = 0; i < userId.length; i++) {
+                hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            
+            const index = Math.abs(hash) % colors.length;
+            return colors[index];
+        }
+        
+        // Format timestamp to time ago
+        function getTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            
+            let interval = Math.floor(seconds / 31536000);
+            if (interval > 1) return interval + ' years ago';
+            if (interval === 1) return '1 year ago';
+            
+            interval = Math.floor(seconds / 2592000);
+            if (interval > 1) return interval + ' months ago';
+            if (interval === 1) return '1 month ago';
+            
+            interval = Math.floor(seconds / 86400);
+            if (interval > 1) return interval + ' days ago';
+            if (interval === 1) return '1 day ago';
+            
+            interval = Math.floor(seconds / 3600);
+            if (interval > 1) return interval + ' hours ago';
+            if (interval === 1) return '1 hour ago';
+            
+            interval = Math.floor(seconds / 60);
+            if (interval > 1) return interval + ' minutes ago';
+            if (interval === 1) return '1 minute ago';
+            
+            if (seconds < 10) return 'just now';
+            
+            return Math.floor(seconds) + ' seconds ago';
+        }
+        
+        // Tab switching
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // Remove active class from all buttons and contents
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabContents.forEach(content => content.classList.remove('active'));
+                
+                // Add active class to clicked button and corresponding content
+                button.classList.add('active');
+                const tabName = button.dataset.tab;
+                document.getElementById(`${tabName}-content`).classList.add('active');
+            });
+        });
+        
+        // Options modal
+        moreOptionsBtn.addEventListener('click', () => {
+            optionsModal.style.display = 'flex';
+        });
+        
+        closeModalBtn.addEventListener('click', () => {
+            optionsModal.style.display = 'none';
+        });
+        
+        // Close modal when clicking outside
+        window.addEventListener('click', (event) => {
+            if (event.target === optionsModal) {
+                optionsModal.style.display = 'none';
+            }
+        });
+        
+        // Handle option buttons
+        document.getElementById('reportUserBtn').addEventListener('click', () => {
+            alert('Report submitted. Thank you for helping keep our community safe.');
+            optionsModal.style.display = 'none';
+        });
+        
+        document.getElementById('blockUserBtn').addEventListener('click', () => {
+            if (confirm('Are you sure you want to block this user? You will no longer see their posts or messages.')) {
+                // Add block functionality here
+                alert('User has been blocked.');
+                optionsModal.style.display = 'none';
+            }
+        });
+        
+        document.getElementById('shareProfileBtn').addEventListener('click', () => {
+            // Share functionality
+            const shareUrl = window.location.href;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: document.title,
+                    url: shareUrl
+                }).catch(console.error);
+            } else {
+                // Fallback for browsers that don't support the Web Share API
+                prompt('Copy this link to share this profile:', shareUrl);
+            }
+            
+            optionsModal.style.display = 'none';
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Magnetar - Academy</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#C00000">
+  <meta name="description" content="Magnetar - Learning Academy">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Magnetar">
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --magnetar-red: #C00000;
+      --text-dark: #1A1A1A;
+    }
+    /* Global styles: Body uses Open Sans; headings and navbar use Roboto */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Open Sans', sans-serif;
+    }
+    h1, h2, h3, h4, h5, h6, .heading, .bottom-nav {
+      font-family: 'Roboto', sans-serif;
+    }
+    body {
+      background-color: #f5f5f5;
+      color: var(--text-dark);
+      -webkit-tap-highlight-color: transparent;
+      overflow-x: hidden;
+      /* Reserve space for sticky header and fixed bottom navbar */
+      padding-top: 70px; /* Make space for sticky header */
+      padding-bottom: 70px;
+    }
+    /* Sticky Header */
+    header {
+      position: sticky; /* Make the header sticky */
+      top: 0; /* Stick it to the top of the viewport */
+      left: 0;
+      right: 0;
+      background-color: #fff;
+      padding: 16px 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      z-index: 50;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    /* Header Logo and Icons */
+    .header-logo-container {
+      display: flex;
+      align-items: center;
+    }
+    .header-logo-container div {
+      width: 24px;
+      height: 24px;
+      margin-right: 8px;
+    }
+    .header-logo-text {
+      font-size: 1.25rem;
+      font-weight: 500;
+    }
+    .header-icons-right {
+      position: absolute;
+      right: 20px;
+      display: flex;
+      align-items: center;
+    }
+    .header-icons-right .material-icons {
+      color: #555;
+      font-size: 1.75rem;
+    }
+    .header-icons-right .badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background-color: var(--magnetar-red);
+      color: white;
+      font-size: 0.7rem;
+      padding: 2px 5px;
+      border-radius: 50%;
+    }
+    /* Main Content */
+    main {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    /* Featured Banner */
+    .featured-banner {
+      position: relative;
+      width: 100%;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 20px;
+      cursor: pointer;
+    }
+    .featured-banner img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .featured-banner-content {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      padding: 20px;
+      background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
+      color: white;
+    }
+    .featured-banner-content h2 {
+      font-size: 1.5rem;
+      margin-bottom: 5px;
+    }
+    .featured-banner-content p {
+      font-size: 1rem;
+    }
+    /* Category Filters */
+    .category-filters {
+      display: flex;
+      overflow-x: auto;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+    .category-filters::-webkit-scrollbar {
+      height: 5px;
+    }
+    .category-filters::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+    .category-filters::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 5px;
+    }
+    .category-filters::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+    .category-filter {
+      background-color: #ddd;
+      color: #333;
+      border: none;
+      padding: 8px 15px;
+      margin-right: 10px;
+      border-radius: 20px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background-color 0.3s;
+    }
+    .category-filter.active {
+      background-color: var(--magnetar-red);
+      color: white;
+    }
+    /* Courses Container */
+    .courses-container {
+      margin-bottom: 20px;
+    }
+    .section-title {
+      font-size: 1.5rem;
+      margin-bottom: 15px;
+    }
+    .courses-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+    }
+    .course-card {
+      background-color: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+      cursor: pointer;
+      padding: 10px;
+    }
+    .course-card:active {
+      transform: scale(0.98);
+    }
+    .course-icon {
+      width: 100%;
+      height: 150px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+    .course-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .course-content {
+      padding: 10px;
+    }
+    .course-title {
+      font-size: 1.2rem;
+      font-weight: 500;
+      margin-bottom: 5px;
+    }
+    .course-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: #777;
+      margin-bottom: 10px;
+    }
+    .course-description {
+      font-size: 0.9rem;
+      color: #555;
+    }
+    /* Fixed Bottom Navbar */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background-color: #fff;
+      padding: 10px 20px;
+      box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+      z-index: 50;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+    }
+    .bottom-nav .nav-item {
+      color: #777;
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: color 0.3s;
+    }
+    .bottom-nav .nav-item:hover {
+      color: var(--magnetar-red);
+    }
+    .bottom-nav .center-button-nav {
+      background-color: transparent;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+    }
+    .bottom-nav .center-button-nav:hover {
+      transform: none;
+    }
+    /* Loading Overlay */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(255, 255, 255, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    .loading-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 3px solid rgba(192, 0, 0, 0.1);
+      border-top-color: var(--magnetar-red);
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 20px;
+      color: #777;
+      display: none;
+    }
+    .empty-state i {
+      font-size: 3rem;
+      color: #ddd;
+      margin-bottom: 15px;
+    }
+    .empty-state h3 {
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+    }
+    .empty-state p {
+      font-size: 1rem;
+    }
+  </style>
+  <script>
+    document.addEventListener('touchstart', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    document.addEventListener('touchmove', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(event) {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, { passive: false });
+  </script>
+</head>
+
+<body class="flex flex-col mx-auto min-h-screen max-w-sm w-full">
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="loading-overlay active">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <!-- Sticky Header -->
+  <header class="relative">
+    <!-- Header Logo (Left) -->
+    <div class="absolute left-4 header-logo-container flex items-center">
+      <div class="w-8 h-8 bg-no-repeat bg-center bg-contain"
+           style="background-image: url('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20250127_191600_0000-6AwFlDvh6mQeKcJJwH3Jlyef5Qpeic.png');"></div>
+      <span class="header-logo-text ml-2">MAGNETAR</span>
+    </div>
+    <!-- Center Title -->
+    <h1 class="text-center">Academy</h1>
+    <!-- Header Icons (Right) -->
+    <div class="absolute right-4 header-icons-right flex items-center">
+      <div class="cursor-pointer" onclick="handleNotificationClick()">
+        <span class="material-icons text-2xl" style="color: #555;">notifications</span>
+        <span id="notificationBadge" class="badge"></span>
+      </div>
+      <div class="cursor-pointer ml-4" onclick="handleMessageClick()">
+        <span class="material-icons text-2xl" style="color: #555;">email</span>
+        <span id="messageBadge" class="badge"></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main>
+    <!-- Featured Banner -->
+    <div id="featuredBanner" class="featured-banner">
+      <!-- Featured banner content will be injected dynamically -->
+    </div>
+
+    <!-- Category Filters -->
+    <div class="category-filters" id="categoryFilters">
+      <button class="category-filter active" data-category="all">All</button>
+      <button class="category-filter" data-category="marketing">Marketing</button>
+      <button class="category-filter" data-category="success">Success</button>
+      <button class="category-filter" data-category="financial">Financial</button>
+      <button class="category-filter" data-category="recognition">Recognition</button>
+      <button class="category-filter" data-category="orientation">Orientation</button>
+    </div>
+
+    <!-- Courses Container -->
+    <div class="courses-container">
+      <h2 class="section-title" id="coursesTitle">All Courses</h2>
+      <div id="coursesGrid" class="courses-grid">
+        <!-- Course cards will be injected dynamically -->
+      </div>
+      <div class="empty-state" id="emptyState">
+        <span class="material-icons" style="font-size: 3rem; color: #ddd; margin-bottom: 15px;">videocam_off</span>
+        <h3>No courses found</h3>
+        <p>There are no courses available in this category. Please check back later.</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Fixed Bottom Navbar -->
+  <div class="bg-white border-t border-gray-300 w-full max-w-sm flex justify-around items-center py-2 fixed bottom-0 left-1/2 transform -translate-x-1/2 bottom-nav">
+    <div class="nav-item cursor-pointer" onclick="window.location.href='social.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em;">people</span>
+    </div>
+    <div class="nav-item cursor-pointer" onclick="window.location.href='wallet.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em;">account_balance_wallet</span>
+    </div>
+    <div class="center-button-nav nav-item cursor-pointer" onclick="window.location.href='index.html'">
+      <div class="w-12 h-12 rounded-full overflow-hidden bg-transparent flex items-center justify-center shadow-md">
+        <div class="w-8 h-8 bg-contain bg-center bg-no-repeat" style="background-image: url('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20250127_191600_0000-6AwFlDvh6mQeKcJJwH3Jlyef5Qpeic.png');"></div>
+      </div>
+    </div>
+    <div class="nav-item cursor-pointer" onclick="window.location.href='academy.html'">
+      <span class="material-icons text-red-600 text-xl" style="font-size: 1.5em;">school</span>
+    </div>
+    <div class="nav-item cursor-pointer" onclick="window.location.href='settings.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em;">settings</span>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs and Course Collection Scripts -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js";
+    import { getDatabase, ref, get, onValue } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDtNedkJo6ikNneZZdrheiWbE3Dn2B8kwQ",
+        authDomain: "ces-project-f8b4e.firebaseapp.com",
+        databaseURL: "https://ces-project-f8b4e-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "ces-project-f8b4e",
+        storageBucket: "ces-project-f8b4e.firebasestorage.app",
+        messagingSenderId: "580767851656",
+        appId: "1:580767851656:web:2c852e7edb81a6decdeb3d",
+        measurementId: "G-K73DSMWBTP"
+      };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const database = getDatabase(app);
+
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const featuredBanner = document.getElementById('featuredBanner');
+    const coursesGrid = document.getElementById('coursesGrid');
+    const emptyState = document.getElementById('emptyState');
+    const categoryFilters = document.querySelectorAll('.category-filter');
+    const coursesTitle = document.getElementById('coursesTitle');
+
+    let allCourses = [];
+    let activeCategory = 'all';
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        await loadCourses();
+        loadingOverlay.classList.remove('active');
+      } else {
+        window.location.href = 'email-login.html';
+      }
+    });
+
+    async function loadCourses() {
+      try {
+        const coursesRef = ref(database, "courses");
+        onValue(coursesRef, (snapshot) => { // Use onValue for real-time updates
+          const coursesData = snapshot.val();
+          allCourses = [];
+          if (coursesData) {
+            Object.keys(coursesData).forEach(key => {
+              allCourses.push({ id: key, ...coursesData[key] });
+            });
+            // Sort courses by created_at descending
+            allCourses.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            coursesTitle.textContent = `${allCourses.length} courses`;
+            renderCourses(allCourses);
+          } else {
+            coursesTitle.textContent = "0 courses";
+            showEmptyState();
+          }
+          loadingOverlay.classList.remove('active'); // Hide loading after data is loaded
+        }, (error) => {
+          console.error("Error loading courses:", error);
+          showEmptyState("Error loading courses. Please try again.");
+          loadingOverlay.classList.remove('active'); // Hide loading even on error
+        });
+      } catch (error) {
+        console.error("Error initializing course loading:", error);
+        showEmptyState("Error initializing courses. Please try again.");
+        loadingOverlay.classList.remove('active'); // Hide loading even on initialization error
+      }
+    }
+
+    function renderCourses(courses) {
+      coursesGrid.innerHTML = '';
+      if (courses.length === 0) {
+        showEmptyState();
+        return;
+      }
+      emptyState.style.display = 'none';
+      // Set featured banner using the newest course
+      const featuredCourse = courses[0];
+      featuredBanner.innerHTML = `
+        <img src="${featuredCourse.image_thumbnail}" alt="${featuredCourse.title}">
+        <div class="featured-banner-content">
+          <h2>${featuredCourse.title}</h2>
+          <p>${featuredCourse.author}</p>
+        </div>
+      `;
+      featuredBanner.addEventListener('click', () => {
+        window.location.href = `course-details.html?id=${featuredCourse.id}`;
+      });
+      // Render each course card
+      courses.forEach(course => {
+        const courseDate = new Date(course.created_at);
+        const formattedDate = `${courseDate.getDate()}/${courseDate.getMonth() + 1}/${courseDate.getFullYear()}`;
+
+        const courseCard = document.createElement('div');
+        courseCard.className = 'course-card';
+        courseCard.innerHTML = `
+          <div class="course-icon">
+            <img src="${course.image_thumbnail}" alt="${course.title}">
+          </div>
+          <div class="course-content">
+            <div class="course-title">${course.title || 'Untitled Course'}</div>
+            <div class="course-info">
+              <span>${course.author || 'Unknown'}</span>
+              <span>${formattedDate}</span>
+            </div>
+            <div class="course-description">${course.description || 'No description available.'}</div>
+          </div>
+        `;
+        courseCard.addEventListener('click', () => {
+          window.location.href = `course-details.html?id=${course.id}`;
+        });
+        coursesGrid.appendChild(courseCard);
+      });
+    }
+
+
+    function showEmptyState(message = "We couldn't find any courses matching your criteria") {
+      const emptyHeading = emptyState.querySelector('h3');
+      if (emptyHeading) emptyHeading.textContent = message;
+      emptyState.style.display = 'block';
+    }
+
+    // Category Filters
+    categoryFilters.forEach(filter => {
+      filter.addEventListener('click', function() {
+        categoryFilters.forEach(f => f.classList.remove('active'));
+        this.classList.add('active');
+        activeCategory = this.dataset.category;
+        if (activeCategory === 'all') {
+          renderCourses(allCourses);
+          coursesTitle.textContent = `${allCourses.length} courses`;
+        } else {
+          const filteredCourses = allCourses.filter(course =>
+            course.title.toLowerCase().includes(activeCategory) ||
+            course.description.toLowerCase().includes(activeCategory)
+          );
+          renderCourses(filteredCourses);
+          coursesTitle.textContent = `${filteredCourses.length} courses`;
+        }
+      });
+    });
+
+    // Dummy functions for header icon actions
+    function handleNotificationClick() {
+      window.location.href = 'notifications.html';
+    }
+    function handleMessageClick() {
+      window.location.href = 'messages.html';
+    }
+
+    window.handleNotificationClick = handleNotificationClick;
+    window.handleMessageClick = handleMessageClick;
+  </script>
+</body>
+</html>

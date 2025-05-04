@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Magnetar - Shop</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#C00000">
+  <meta name="description" content="Magnetar - Shop">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Magnetar">
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --magnetar-red: #C00000;
+      --text-dark: #1A1A1A;
+    }
+    
+    body {
+      font-family: 'Open Sans', sans-serif;
+      color: var(--text-dark);
+      background-color: #f5f5f5;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    h1, h2, h3, h4, h5, h6, .heading {
+      font-family: 'Roboto', sans-serif;
+    }
+    
+    .btn-primary {
+      background-color: var(--magnetar-red);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    .btn-primary:hover, .btn-primary:active {
+      background-color: #A00000;
+      transform: translateY(-1px);
+    }
+    
+    .btn-primary:active {
+      transform: translateY(1px);
+    }
+    
+    /* Loading animation */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    
+    .loading-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 3px solid rgba(192, 0, 0, 0.1);
+      border-top-color: var(--magnetar-red);
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Bottom nav hover animation */
+    .nav-item {
+      transition: all 0.3s ease;
+    }
+    
+    .nav-item:hover {
+      transform: translateY(-5px);
+    }
+
+    /* Center button styles */
+    .center-button {
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      transform: translateY(-10px);
+      transition: all 0.3s ease;
+    }
+
+    .center-button:hover {
+      transform: translateY(-15px);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+    }
+    
+    /* Product card animation */
+    .product-card {
+      transition: all 0.3s ease;
+    }
+    
+    .product-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Product image zoom on hover */
+    .product-image-container {
+      overflow: hidden;
+    }
+    
+    .product-image {
+      transition: transform 0.5s ease;
+    }
+    
+    .product-card:hover .product-image {
+      transform: scale(1.05);
+    }
+    
+    /* Category pills */
+    .category-pill {
+      transition: all 0.3s ease;
+    }
+    
+    .category-pill.active {
+      background-color: var(--magnetar-red);
+      color: white;
+    }
+    
+    .category-pill:hover:not(.active) {
+      background-color: #f3f4f6;
+      transform: translateY(-2px);
+    }
+    
+    /* Badge animation */
+    .badge {
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+  </style>
+  <script>
+    // Prevent zoom on double-tap
+    document.addEventListener('touchstart', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Prevent zoom on pinch
+    document.addEventListener('touchmove', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Prevent zoom on double-tap
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(event) {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, { passive: false });
+  </script>
+</head>
+
+<body class="bg-gray-100 flex flex-col mx-auto min-h-screen max-w-sm w-full">
+  <!-- Loading overlay -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <!-- Header -->
+  <header class="bg-white text-gray-800 p-4 text-lg font-semibold flex items-center justify-between sticky top-0 z-50 shadow-sm">
+    <div class="flex items-center">
+      <span class="material-icons text-2xl cursor-pointer text-gray-700 mr-2" onclick="window.history.back()">arrow_back</span>
+      <h1>Shop</h1>
+    </div>
+    <div class="flex items-center">
+      <a href="notifications.html" class="mr-3">
+        <span class="material-icons text-2xl cursor-pointer text-gray-700">notifications</span>
+      </a>
+      <div class="w-32 h-10 bg-no-repeat bg-center bg-contain"
+          style="background-image: url('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20250127_191600_0000-6AwFlDvh6mQeKcJJwH3Jlyef5Qpeic.png')"></div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col items-center w-full overflow-y-auto pb-24">
+    <!-- Search Bar -->
+    <div class="w-full p-4 bg-white sticky top-16 z-40">
+      <div class="relative">
+        <input type="text" id="search-input" placeholder="Search products" class="w-full bg-gray-100 rounded-full py-2 px-4 pl-10 outline-none focus:ring-2 focus:ring-red-500">
+        <span class="material-icons absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">search</span>
+      </div>
+    </div>
+    
+    <!-- Categories -->
+    <div class="w-full px-4 py-2 bg-white shadow-sm">
+      <div class="flex overflow-x-auto space-x-2 pb-2" id="categories-container">
+        <div class="category-pill active px-4 py-1 rounded-full text-sm font-medium cursor-pointer whitespace-nowrap" data-category="all">All</div>
+        <div class="category-pill px-4 py-1 bg-gray-100 rounded-full text-sm font-medium cursor-pointer whitespace-nowrap" data-category="clothing">Clothing</div>
+        <div class="category-pill px-4 py-1 bg-gray-100 rounded-full text-sm font-medium cursor-pointer whitespace-nowrap" data-category="accessories">Accessories</div>
+        <div class="category-pill px-4 py-1 bg-gray-100 rounded-full text-sm font-medium cursor-pointer whitespace-nowrap" data-category="books">Books</div>
+        <div class="category-pill px-4 py-1 bg-gray-100 rounded-full text-sm font-medium cursor-pointer whitespace-nowrap" data-category="electronics">Electronics</div>
+        <div class="category-pill px-4 py-1 bg-gray-100 rounded-full text-sm font-medium cursor-pointer whitespace-nowrap" data-category="home">Home</div>
+      </div>
+    </div>
+    
+    <!-- Featured Banner -->
+    <div class="w-full p-4">
+      <div class="relative bg-white rounded-lg overflow-hidden shadow-md">
+        <div class="absolute top-0 left-0 bg-red-600 text-white px-3 py-1 rounded-br-lg text-xs font-bold">NEW</div>
+        <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/featured-product.jpg" alt="Featured Product" class="w-full h-40 object-cover">
+        <div class="p-4">
+          <h2 class="text-lg font-bold">Spring Collection 2025</h2>
+          <p class="text-sm text-gray-600 mt-1">Discover our latest products for the new season</p>
+          <button class="mt-3 bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium">Shop Now</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Products -->
+    <div class="w-full p-4">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-lg font-bold">Products</h2>
+        <div class="flex items-center">
+          <span class="material-icons text-gray-700 mr-1">sort</span>
+          <select id="sort-select" class="text-sm border-none bg-transparent outline-none">
+            <option value="featured">Featured</option>
+            <option value="new">Newest</option>
+            <option value="price-low">Price: Low to High</option>
+            <option value="price-high">Price: High to Low</option>
+          </select>
+        </div>
+      </div>
+      
+      <div id="products-container" class="grid grid-cols-2 gap-4">
+        <!-- Products will be dynamically added here -->
+        <!-- Loading placeholders -->
+        <div class="product-skeleton bg-white rounded-lg shadow-sm animate-pulse">
+          <div class="h-40 bg-gray-200 rounded-t-lg"></div>
+          <div class="p-3">
+            <div class="h-4 bg-gray-200 rounded mb-2"></div>
+            <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+            <div class="h-6 bg-gray-200 rounded w-1/2 mt-4"></div>
+          </div>
+        </div>
+        <div class="product-skeleton bg-white rounded-lg shadow-sm animate-pulse">
+          <div class="h-40 bg-gray-200 rounded-t-lg"></div>
+          <div class="p-3">
+            <div class="h-4 bg-gray-200 rounded mb-2"></div>
+            <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+            <div class="h-6 bg-gray-200 rounded w-1/2 mt-4"></div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Load More -->
+      <div class="mt-6 text-center">
+        <button id="load-more-btn" class="bg-white text-red-600 border border-red-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors">
+          Load More
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Cart Button -->
+  <div class="fixed bottom-20 right-4 z-50">
+    <button id="cart-btn" class="relative w-14 h-14 rounded-full bg-red-600 text-white flex items-center justify-center shadow-lg">
+      <span class="material-icons">shopping_cart</span>
+      <span id="cart-badge" class="badge absolute -top-1 -right-1 bg-white text-red-600 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shadow">0</span>
+    </button>
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bg-white w-full max-w-sm flex justify-around items-center py-2 fixed bottom-0 left-1/2 transform -translate-x-1/2 shadow-lg">
+    <div class="nav-item cursor-pointer" onclick="window.location.href='social.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">people</span>
+    </div>
+    <div class="nav-item cursor-pointer" onclick="window.location.href='wallet.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">account_balance_wallet</span>
+    </div>
+    <div class="center-button cursor-pointer shadow-xl" onclick="window.location.href='index.html'">
+      <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
+        <div class="w-8 h-8 bg-contain bg-center bg-no-repeat"
+            style="background-image: url('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20250127_191600_0000-6AwFlDvh6mQeKcJJwH3Jlyef5Qpeic.png')"></div>
+      </div>
+    </div>
+    <div class="nav-item cursor-pointer" onclick="window.location.href='academy.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">school</span>
+    </div>
+    <div class="nav-item cursor-pointer" onclick="window.location.href='settings.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">settings</span>
+    </div>
+  </div>
+
+  <!-- Product Detail Modal -->
+  <div id="product-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg w-11/12 max-w-md max-h-[90vh] overflow-y-auto">
+      <div class="sticky top-0 bg-white p-4 border-b border-gray-200 flex justify-between items-center z-10">
+        <h3 class="font-bold text-lg" id="modal-product-title">Product Title</h3>
+        <span class="material-icons cursor-pointer" id="close-modal">close</span>
+      </div>
+      <div id="modal-content" class="p-4">
+        <!-- Modal content will be dynamically added here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Cart Modal -->
+  <div id="cart-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg w-11/12 max-w-md max-h-[90vh] overflow-y-auto">
+      <div class="sticky top-0 bg-white p-4 border-b border-gray-200 flex justify-between items-center z-10">
+        <h3 class="font-bold text-lg">Your Cart</h3>
+        <span class="material-icons cursor-pointer" id="close-cart-modal">close</span>
+      </div>
+      <div id="cart-items" class="p-4">
+        <!-- Cart items will be dynamically added here -->
+        <div id="empty-cart" class="py-8 text-center">
+          <span class="material-icons text-gray-400 text-5xl mb-3">shopping_cart</span>
+          <p class="text-gray-500">Your cart is empty</p>
+          <button id="continue-shopping" class="mt-4 bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium">Continue Shopping</button>
+        </div>
+      </div>
+      <div id="cart-summary" class="p-4 border-t border-gray-200 sticky bottom-0 bg-white hidden">
+        <div class="flex justify-between items-center mb-3">
+          <span class="font-medium">Subtotal:</span>
+          <span class="font-bold" id="cart-subtotal">₱0.00</span>
+        </div>
+        <div class="flex justify-between items-center mb-3">
+          <span class="font-medium">Shipping:</span>
+          <span id="cart-shipping">₱150.00</span>
+        </div>
+        <div class="flex justify-between items-center mb-4">
+          <span class="font-bold">Total:</span>
+          <span class="font-bold text-lg" id="cart-total">₱0.00</span>
+        </div>
+        <button id="checkout-btn" class="w-full bg-red-600 text-white py-3 rounded-lg font-bold">
+          Checkout
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PayMaya Checkout Modal -->
+  <div id="paymaya-modal" class="fixed inset-0 bg-black bg-opacity-75 flex flex-col z-50 hidden">
+    <div class="bg-white p-4 border-b border-gray-200 flex justify-between items-center">
+      <h3 class="font-bold text-lg">Secure Checkout</h3>
+      <span class="material-icons cursor-pointer" id="close-paymaya-modal">close</span>
+    </div>
+    <div class="flex-1 bg-white">
+      <iframe id="paymaya-iframe" src="about:blank" class="w-full h-full border-0"></iframe>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js";
+    import { getDatabase, ref, get, set, push, update } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtNedkJo6ikNneZZdrheiWbE3Dn2B8kwQ",
+      authDomain: "ces-project-f8b4e.firebaseapp.com",
+      databaseURL: "https://ces-project-f8b4e-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "ces-project-f8b4e",
+      storageBucket: "ces-project-f8b4e.firebasestorage.app",
+      messagingSenderId: "580767851656",
+      appId: "1:580767851656:web:2c852e7edb81a6decdeb3d",
+      measurementId: "G-K73DSMWBTP"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+    
+    // DOM elements
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const productsContainer = document.getElementById('products-container');
+    const categoriesContainer = document.getElementById('categories-container');
+    const searchInput = document.getElementById('search-input');
+    const sortSelect = document.getElementById('sort-select');
+    const loadMoreBtn = document.getElementById('load-more-btn');
+    const cartBtn = document.getElementById('cart-btn');
+    const cartBadge = document.getElementById('cart-badge');
+    const productModal = document.getElementById('product-modal');
+    const modalProductTitle = document.getElementById('modal-product-title');
+    const modalContent = document.getElementById('modal-content');
+    const closeModalBtn = document.getElementById('close-modal');
+    const cartModal = document.getElementById('cart-modal');
+    const closeCartModalBtn = document.getElementById('close-cart-modal');
+    const cartItems = document.getElementById('cart-items');
+    const emptyCart = document.getElementById('empty-cart');
+    const cartSummary = document.getElementById('cart-summary');
+    const cartSubtotal = document.getElementById('cart-subtotal');
+    const cartShipping = document.getElementById('cart-shipping');
+    const cartTotal = document.getElementById('cart-total');
+    const checkoutBtn = document.getElementById('checkout-btn');
+    const continueShoppingBtn = document.getElementById('continue-shopping');
+    const paymayaModal = document.getElementById('paymaya-modal');
+    const paymayaIframe = document.getElementById('paymaya-iframe');
+    const closePaymayaModalBtn = document.getElementById('close-paymaya-modal');
+    
+    // PayMaya sandbox API key
+    const PAYMAYA_PUBLIC_KEY = 'pk-Z0OSzLvIcOI2UIvDhdTGVVfRSSeiGStnceqwUE7n0Ah';
+    
+    let currentUser = null;
+    let currentCategory = 'all';
+    let currentSort = 'featured';
+    let products = [];
+    let displayedProducts = 0;
+    let cart = [];
+    let productsPerPage = 8;
+    
+    // Show loading
+    function showLoading() {
+      loadingOverlay.classList.add('active');
+    }
+    
+    // Hide loading
+    function hideLoading() {
+      loadingOverlay.classList.remove('active');
+    }
+    
+    // Check authentication state
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        currentUser = user;
+        console.log('User is authenticated:', user.uid);
+        
+        // Load cart
+        loadCart();
+        
+        // Load products
+        loadProducts();
+      } else {
+        // Redirect to login if not authenticated
+        window.location.href = 'email-login.html';
+      }
+    });
+    
+    // Load cart from local storage
+    function loadCart() {
+      const savedCart = localStorage.getItem(`cart_${currentUser.uid}`);
+      if (savedCart) {
+        cart = JSON.parse(savedCart);
+        updateCartBadge();
+      }
+    }
+    
+    // Save cart to local storage
+    function saveCart() {
+      localStorage.setItem(`cart_${currentUser.uid}`, JSON.stringify(cart));
+      updateCartBadge();
+    }
+    
+    // Update cart badge
+    function updateCartBadge() {
+      const totalItems = cart.reduce((total, item) => total + item.quantity, 0);
+      cartBadge.textContent = totalItems;
+      
+      if (totalItems > 0) {
+        cartBadge.classList.remove('hidden');
+      } else {
+        cartBadge.classList.add('hidden');
+      }
+    }
+    
+    // Load products from Firebase
+    async function loadProducts() {
+      try {
+        showLoading();
+        
+        // Clear previous products
+        productsContainer.innerHTML = '';
+        displayedProducts = 0;
+        
+        // Get products from Firebase
+        const productsRef = ref(db, 'products');
+        const snapshot = await get(productsRef);
+        
+        if (snapshot.exists()) {
+          const productsData = snapshot.val();
+          products = Object.keys(productsData).map(key => ({
+            id: key,
+            ...productsData[key]
+          }));
+          
+          // Filter products by category
+          if (currentCategory !== 'all') {
+            products = products.filter(product => product.category === currentCategory);
+          }
+          
+          // Filter products by search
+          const searchTerm = searchInput.value.toLowerCase().trim();
+          if (searchTerm) {
+            products = products.filter(product => 
+              product.title.toLowerCase().includes(searchTerm) ||
+              product.description.toLowerCase().includes(searchTerm) ||
+              product.category.toLowerCase().includes(searchTerm)
+            );
+          }
+          
+          // Sort products
+          sortProducts();
+          
+          // Show first batch of products
+          showMoreProducts();
+        } else {
+          // If no products in Firebase, create some sample products
+          await createSampleProducts();
+          loadProducts();
+        }
+      } catch (error) {
+        console.error('Error loading products:', error);
+        showToast('Error loading products', 'error');
+      } finally {
+        hideLoading();
+      }
+    }
+    
+    // Create sample products
+    async function createSampleProducts() {
+      const sampleProducts = [
+        {
+          title: "Magnetar Logo T-Shirt",
+          description: "Classic black t-shirt with Magnetar logo",
+          price: 750,
+          category: "clothing",
+          image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/tshirt-product.jpg",
+          featured: true,
+          inStock: true,
+          createdAt: Date.now()
+        },
+        {
+          title: "Magnetar Stainless Tumbler",
+          description: "Keep your drinks hot or cold with our premium tumbler",
+          price: 1200,
+          category: "accessories",
+          image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/tumbler-product.jpg",
+          featured: true,
+          inStock: true,
+          createdAt: Date.now()
+        },
+        {
+          title: "Cryptocurrency Guide Book",
+          description: "Comprehensive guide to cryptocurrency investing",
+          price: 950,
+          category: "books",
+          image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/book-product.jpg",
+          featured: true,
+          inStock: true,
+          createdAt: Date.now()
+        },
+        {
+          title: "Magnetar Hoodie",
+          description: "Stay warm with our high-quality hoodie",
+          price: 1500,
+          category: "clothing",
+          image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/hoodie-product.jpg",
+          featured: false,
+          inStock: true,
+          createdAt: Date.now()
+        },
+        {
+          title: "Crypto Hardware Wallet",
+          description: "Secure your assets with our hardware wallet",
+          price: 3500,
+          category: "electronics",
+          image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/wallet-product.jpg",
+          featured: true,
+          inStock: true,
+          createdAt: Date.now()
+        },
+        {
+          title: "Magnetar Cap",
+          description: "Stylish cap with embroidered logo",
+          price: 650,
+          category: "clothing",
+          image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/cap-product.jpg",
+          featured: false,
+          inStock: true,
+          createdAt: Date.now()
+        },
+        {
+          title: "Blockchain Strategy Guide",
+          description: "Learn advanced blockchain strategies",
+          price: 1200,
+          category: "books",
+          image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/guide-product.jpg",
+          featured: false,
+          inStock: true,
+          createdAt: Date.now()
+        },
+        {
+          title: "Smart Home Hub",
+          description: "Control your home with our smart hub",
+          price: 4500,
+          category: "electronics",
+          image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/hub-product.jpg",
+          featured: false,
+          inStock: true,
+          createdAt: Date.now()
+        },
+        {
+          title: "Coffee Mug",
+          description: "Start your day with our premium coffee mug",
+          price: 450,
+          category: "home",
+          image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/mug-product.jpg",
+          featured: false,
+          inStock: true,
+          createdAt: Date.now()
+        },
+        {
+          title: "Wireless Earbuds",
+          description: "Premium sound quality with noise cancellation",
+          price: 2800,
+          category: "electronics",
+          image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/earbuds-product.jpg",
+          featured: false,
+          inStock: true,
+          createdAt: Date.now()
+        },
+        {
+          title: "Desk Organizer",
+          description: "Keep your workspace tidy and organized",
+          price: 850,
+          category: "home",
+          image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/organizer-product.jpg",
+          featured: false,
+          inStock: true,
+          createdAt: Date.now()
+        },
+        {
+          title: "Crypto Art Print",
+          description: "Limited edition crypto-inspired wall art",
+          price: 1900,
+          category: "home",
+          image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/art-product.jpg",
+          featured: false,
+          inStock: true,
+          createdAt: Date.now()
+        }
+      ];
+      
+      const productsRef = ref(db, 'products');
+      for (const product of sampleProducts) {
+        await push(productsRef, product);
+      }
+      
+      console.log('Sample products created');
+    }
+    
+    // Sort products
+    function sortProducts() {
+      switch (currentSort) {
+        case 'featured':
+          products.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
+          break;
+        case 'new':
+          products.sort((a, b) => b.createdAt - a.createdAt);
+          break;
+        case 'price-low':
+          products.sort((a, b) => a.price - b.price);
+          break;
+        case 'price-high':
+          products.sort((a, b) => b.price - a.price);
+          break;
+      }
+    }
+    
+    // Show more products
+    function showMoreProducts() {
+      const endIndex = Math.min(displayedProducts + productsPerPage, products.length);
+      
+      // If no products to display
+      if (products.length === 0) {
+        productsContainer.innerHTML = `
+          <div class="col-span-2 py-8 text-center">
+            <span class="material-icons text-gray-400 text-5xl mb-3">inventory_2</span>
+            <p class="text-gray-500">No products found</p>
+          </div>
+        `;
+        loadMoreBtn.classList.add('hidden');
+        return;
+      }
+      
+      // Clear skeletons if first batch
+      if (displayedProducts === 0) {
+        productsContainer.innerHTML = '';
+      }
+      
+      // Add products
+      for (let i = displayedProducts; i < endIndex; i++) {
+        const product = products[i];
+        productsContainer.appendChild(createProductElement(product));
+      }
+      
+      // Update displayed count
+      displayedProducts = endIndex;
+      
+      // Hide load more button if all products are shown
+      if (displayedProducts >= products.length) {
+        loadMoreBtn.classList.add('hidden');
+      } else {
+        loadMoreBtn.classList.remove('hidden');
+      }
+    }
+    
+    // Create product element
+    function createProductElement(product) {
+      const element = document.createElement('div');
+      element.className = 'product-card bg-white/ {
+      const element = document.createElement('div');
+      element.className = 'product-card bg-white rounded-lg shadow-sm overflow-hidden cursor-pointer';
+      
+      const inStockBadge = product.inStock ? '' : `<div class="absolute top-0 right-0 bg-red-600 text-white px-2 py-1 text-xs font-bold">OUT OF STOCK</div>`;
+      const featuredBadge = product.featured ? `<div class="absolute top-0 left-0 bg-yellow-500 text-white px-2 py-1 text-xs font-bold">FEATURED</div>` : '';
+      
+      element.innerHTML = `
+        <div class="relative product-image-container">
+          ${featuredBadge}
+          ${inStockBadge}
+          <img src="${product.image}" alt="${product.title}" class="product-image w-full h-40 object-cover">
+        </div>
+        <div class="p-3">
+          <h3 class="font-medium text-sm line-clamp-1">${product.title}</h3>
+          <p class="text-xs text-gray-600 mt-1 line-clamp-2">${product.description}</p>
+          <div class="flex justify-between items-center mt-3">
+            <span class="font-bold">₱${product.price.toLocaleString()}</span>
+            <button class="add-to-cart-btn bg-red-600 text-white px-2 py-1 rounded text-xs font-medium" data-id="${product.id}">
+              Add to Cart
+            </button>
+          </div>
+        </div>
+      `;
+      
+      // Add click event to view product
+      element.addEventListener('click', (e) => {
+        // Don't open modal if "Add to Cart" was clicked
+        if (!e.target.classList.contains('add-to-cart-btn')) {
+          openProductModal(product);
+        }
+      });
+      
+      // Add click event to "Add to Cart" button
+      const addToCartBtn = element.querySelector('.add-to-cart-btn');
+      addToCartBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        addToCart(product);
+      });
+      
+      return element;
+    }
+    
+    // Open product modal
+    function openProductModal(product) {
+      modalProductTitle.textContent = product.title;
+      
+      // Format price
+      const formattedPrice = product.price.toLocaleString();
+      
+      modalContent.innerHTML = `
+        <div class="relative">
+          <img src="${product.image}" alt="${product.title}" class="w-full h-56 object-cover rounded-lg">
+          ${product.featured ? `<div class="absolute top-0 left-0 bg-yellow-500 text-white px-2 py-1 text-xs font-bold rounded-br-lg">FEATURED</div>` : ''}
+          ${product.inStock ? '' : `<div class="absolute top-0 right-0 bg-red-600 text-white px-2 py-1 text-xs font-bold rounded-bl-lg">OUT OF STOCK</div>`}
+        </div>
+        <div class="mt-4">
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-500">${product.category.charAt(0).toUpperCase() + product.category.slice(1)}</span>
+            <span class="font-bold text-lg">₱${formattedPrice}</span>
+          </div>
+          <p class="mt-3 text-gray-700">${product.description}</p>
+          
+          <div class="mt-6">
+            <label for="quantity" class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+            <div class="flex items-center">
+              <button id="decrease-qty" class="w-8 h-8 bg-gray-200 rounded-l flex items-center justify-center">
+                <span class="material-icons text-sm">remove</span>
+              </button>
+              <input type="number" id="product-quantity" min="1" value="1" class="w-12 h-8 text-center border-y border-gray-200 outline-none">
+              <button id="increase-qty" class="w-8 h-8 bg-gray-200 rounded-r flex items-center justify-center">
+                <span class="material-icons text-sm">add</span>
+              </button>
+            </div>
+          </div>
+          
+          <button id="modal-add-to-cart" class="w-full mt-6 bg-red-600 text-white py-3 rounded-lg font-bold flex items-center justify-center" ${product.inStock ? '' : 'disabled'}>
+            <span class="material-icons mr-2">shopping_cart</span>
+            ${product.inStock ? 'Add to Cart' : 'Out of Stock'}
+          </button>
+        </div>
+      `;
+      
+      // Show modal
+      productModal.classList.remove('hidden');
+      
+      // Add event listeners
+      const decreaseBtn = document.getElementById('decrease-qty');
+      const increaseBtn = document.getElementById('increase-qty');
+      const quantityInput = document.getElementById('product-quantity');
+      const addToCartBtn = document.getElementById('modal-add-to-cart');
+      
+      decreaseBtn.addEventListener('click', () => {
+        const currentValue = parseInt(quantityInput.value);
+        if (currentValue > 1) {
+          quantityInput.value = currentValue - 1;
+        }
+      });
+      
+      increaseBtn.addEventListener('click', () => {
+        const currentValue = parseInt(quantityInput.value);
+        quantityInput.value = currentValue + 1;
+      });
+      
+      addToCartBtn.addEventListener('click', () => {
+        if (product.inStock) {
+          const quantity = parseInt(quantityInput.value);
+          addToCart(product, quantity);
+          productModal.classList.add('hidden');
+        }
+      });
+    }
+    
+    // Add to cart
+    function addToCart(product, quantity = 1) {
+      // Check if product is already in cart
+      const existingItem = cart.find(item => item.id === product.id);
+      
+      if (existingItem) {
+        // Update quantity
+        existingItem.quantity += quantity;
+      } else {
+        // Add new item
+        cart.push({
+          id: product.id,
+          title: product.title,
+          price: product.price,
+          image: product.image,
+          quantity
+        });
+      }
+      
+      // Save cart
+      saveCart();
+      
+      // Show toast
+      showToast(`${product.title} added to cart`, 'success');
+    }
+    
+    // Open cart modal
+    function openCartModal() {
+      // Clear cart items
+      cartItems.innerHTML = '';
+      
+      if (cart.length === 0) {
+        // Show empty cart state
+        emptyCart.classList.remove('hidden');
+        cartSummary.classList.add('hidden');
+      } else {
+        // Hide empty cart state
+        emptyCart.classList.add('hidden');
+        cartSummary.classList.remove('hidden');
+        
+        // Add cart items
+        cart.forEach(item => {
+          const cartItem = document.createElement('div');
+          cartItem.className = 'flex items-center pb-4 mb-4 border-b border-gray-200';
+          
+          cartItem.innerHTML = `
+            <div class="w-16 h-16 bg-gray-100 rounded overflow-hidden mr-3">
+              <img src="${item.image}" alt="${item.title}" class="w-full h-full object-cover">
+            </div>
+            <div class="flex-1">
+              <h4 class="font-medium text-sm">${item.title}</h4>
+              <div class="flex justify-between items-center mt-2">
+                <div class="flex items-center">
+                  <button class="decrease-cart-qty w-6 h-6 bg-gray-200 rounded-l flex items-center justify-center" data-id="${item.id}">
+                    <span class="material-icons text-xs">remove</span>
+                  </button>
+                  <input type="number" class="cart-item-qty w-8 h-6 text-center text-xs border-y border-gray-200 outline-none" min="1" value="${item.quantity}" data-id="${item.id}">
+                  <button class="increase-cart-qty w-6 h-6 bg-gray-200 rounded-r flex items-center justify-center" data-id="${item.id}">
+                    <span class="material-icons text-xs">add</span>
+                  </button>
+                </div>
+                <div class="flex items-center">
+                  <span class="text-sm font-bold mr-3">₱${(item.price * item.quantity).toLocaleString()}</span>
+                  <button class="remove-cart-item text-gray-400 hover:text-red-600" data-id="${item.id}">
+                    <span class="material-icons">delete</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+          
+          cartItems.appendChild(cartItem);
+        });
+        
+        // Add event listeners
+        const decreaseBtns = document.querySelectorAll('.decrease-cart-qty');
+        const increaseBtns = document.querySelectorAll('.increase-cart-qty');
+        const quantityInputs = document.querySelectorAll('.cart-item-qty');
+        const removeBtns = document.querySelectorAll('.remove-cart-item');
+        
+        decreaseBtns.forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-id');
+            updateCartItemQuantity(id, -1);
+          });
+        });
+        
+        increaseBtns.forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-id');
+            updateCartItemQuantity(id, 1);
+          });
+        });
+        
+        quantityInputs.forEach(input => {
+          input.addEventListener('change', () => {
+            const id = input.getAttribute('data-id');
+            const quantity = parseInt(input.value);
+            if (quantity > 0) {
+              setCartItemQuantity(id, quantity);
+            } else {
+              input.value = 1;
+              setCartItemQuantity(id, 1);
+            }
+          });
+        });
+        
+        removeBtns.forEach(btn => {
+          btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-id');
+            removeCartItem(id);
+          });
+        });
+        
+        // Update cart summary
+        updateCartSummary();
+      }
+      
+      // Show modal
+      cartModal.classList.remove('hidden');
+    }
+    
+    // Update cart item quantity
+    function updateCartItemQuantity(id, change) {
+      const item = cart.find(item => item.id === id);
+      
+      if (item) {
+        item.quantity += change;
+        
+        if (item.quantity < 1) {
+          item.quantity = 1;
+        }
+        
+        saveCart();
+        openCartModal();
+      }
+    }
+    
+    // Set cart item quantity
+    function setCartItemQuantity(id, quantity) {
+      const item = cart.find(item => item.id === id);
+      
+      if (item) {
+        item.quantity = quantity;
+        saveCart();
+        updateCartSummary();
+      }
+    }
+    
+    // Remove cart item
+    function removeCartItem(id) {
+      cart = cart.filter(item => item.id !== id);
+      saveCart();
+      openCartModal();
+    }
+    
+    // Update cart summary
+    function updateCartSummary() {
+      const subtotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+      const shipping = subtotal > 0 ? 150 : 0;
+      const total = subtotal + shipping;
+      
+      cartSubtotal.textContent = `₱${subtotal.toLocaleString()}`;
+      cartShipping.textContent = `₱${shipping.toLocaleString()}`;
+      cartTotal.textContent = `₱${total.toLocaleString()}`;
+    }
+    
+    // Process checkout
+    async function processCheckout() {
+      try {
+        showLoading();
+        
+        // Create order in Firebase
+        const orderRef = ref(db, `users/${currentUser.uid}/orders`);
+        const newOrderRef = push(orderRef);
+        
+        const subtotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+        const shipping = 150;
+        const total = subtotal + shipping;
+        
+        // Prepare items for PayMaya
+        const items = cart.map(item => ({
+          name: item.title,
+          quantity: item.quantity,
+          amount: {
+            value: item.price
+          },
+          totalAmount: {
+            value: item.price * item.quantity
+          }
+        }));
+        
+        // Create order in Firebase
+        await set(newOrderRef, {
+          items: cart,
+          subtotal,
+          shipping,
+          total,
+          status: 'pending',
+          createdAt: Date.now()
+        });
+        
+        // Create PayMaya checkout
+        const response = await fetch('https://pg-sandbox.paymaya.com/checkout/v1/checkouts', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Basic ${btoa(PAYMAYA_PUBLIC_KEY + ':')}`
+          },
+          body: JSON.stringify({
+            totalAmount: {
+              value: total,
+              currency: 'PHP'
+            },
+            items: items,
+            requestReferenceNumber: newOrderRef.key,
+            redirectUrl: {
+              success: window.location.origin + '/payment-success.html?ref=' + newOrderRef.key,
+              failure: window.location.origin + '/payment-failed.html?ref=' + newOrderRef.key,
+              cancel: window.location.origin + '/payment-canceled.html?ref=' + newOrderRef.key
+            },
+            buyer: {
+              firstName: currentUser.displayName?.split(' ')[0] || 'Magnetar',
+              lastName: currentUser.displayName?.split(' ')[1] || 'User',
+              contact: {
+                email: currentUser.email
+              }
+            }
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to create checkout');
+        }
+        
+        const data = await response.json();
+        console.log('PayMaya checkout created:', data);
+        
+        // Show PayMaya iframe
+        paymayaIframe.src = data.redirectUrl;
+        cartModal.classList.add('hidden');
+        paymayaModal.classList.remove('hidden');
+        
+        // Update order with checkout ID
+        await update(newOrderRef, {
+          checkoutId: data.checkoutId
+        });
+      } catch (error) {
+        console.error('Error processing checkout:', error);
+        showToast('Error processing checkout', 'error');
+      } finally {
+        hideLoading();
+      }
+    }
+    
+    // Event listeners
+    closeModalBtn.addEventListener('click', () => {
+      productModal.classList.add('hidden');
+    });
+    
+    closeCartModalBtn.addEventListener('click', () => {
+      cartModal.classList.add('hidden');
+    });
+    
+    closePaymayaModalBtn.addEventListener('click', () => {
+      paymayaModal.classList.add('hidden');
+    });
+    
+    // Close modals when clicking outside
+    productModal.addEventListener('click', (e) => {
+      if (e.target === productModal) {
+        productModal.classList.add('hidden');
+      }
+    });
+    
+    cartModal.addEventListener('click', (e) => {
+      if (e.target === cartModal) {
+        cartModal.classList.add('hidden');
+      }
+    });
+    
+    // Cart button
+    cartBtn.addEventListener('click', openCartModal);
+    
+    // Continue shopping button
+    continueShoppingBtn.addEventListener('click', () => {
+      cartModal.classList.add('hidden');
+    });
+    
+    // Checkout button
+    checkoutBtn.addEventListener('click', processCheckout);
+    
+    // Load more button
+    loadMoreBtn.addEventListener('click', showMoreProducts);
+    
+    // Category buttons
+    categoriesContainer.addEventListener('click', (e) => {
+      if (e.target.classList.contains('category-pill')) {
+        const category = e.target.getAttribute('data-category');
+        
+        // Update active category
+        document.querySelectorAll('.category-pill').forEach(pill => {
+          pill.classList.remove('active');
+          pill.classList.add('bg-gray-100');
+        });
+        
+        e.target.classList.add('active');
+        e.target.classList.remove('bg-gray-100');
+        
+        currentCategory = category;
+        loadProducts();
+      }
+    });
+    
+    // Search input
+    searchInput.addEventListener('input', () => {
+      loadProducts();
+    });
+    
+    // Sort select
+    sortSelect.addEventListener('change', () => {
+      currentSort = sortSelect.value;
+      loadProducts();
+    });
+    
+    // Helper function to show toast
+    function showToast(message, type = "info") {
+      // Create toast element if it doesn't exist
+      let toast = document.getElementById('toast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toast';
+        toast.className = 'fixed bottom-20 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-lg text-white text-sm font-medium shadow-lg z-50 transition-all duration-300 opacity-0';
+        document.body.appendChild(toast);
+      }
+      
+      // Set toast type
+      if (type === "success") {
+        toast.className = toast.className.replace(/bg-\w+-\d+/g, '') + ' bg-green-500';
+      } else if (type === "error") {
+        toast.className = toast.className.replace(/bg-\w+-\d+/g, '') + ' bg-red-500';
+      } else {
+        toast.className = toast.className.replace(/bg-\w+-\d+/g, '') + ' bg-blue-500';
+      }
+      
+      // Set message and show
+      toast.textContent = message;
+      toast.classList.add('opacity-100');
+      
+      // Hide after 3 seconds
+      setTimeout(() => {
+        toast.classList.remove('opacity-100');
+        setTimeout(() => {
+          toast.remove();
+        }, 300);
+      }, 3000);
+    }
+  </script>
+</body>
+</html>

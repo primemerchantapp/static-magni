@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Magnetar - Persona</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#C00000">
+  <meta name="description" content="Magnetar - Personal Profile">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Magnetar">
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --magnetar-red: #C00000;
+      --text-dark: #1A1A1A;
+    }
+    
+    body {
+      font-family: 'Open Sans', sans-serif;
+      color: var(--text-dark);
+      background-color: #f7f7f7;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    h1, h2, h3, h4, h5, h6, .heading {
+      font-family: 'Roboto', sans-serif;
+    }
+    
+    .btn-primary {
+      background-color: var(--magnetar-red);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    .btn-primary:hover, .btn-primary:active {
+      background-color: #A00000;
+      transform: translateY(-1px);
+    }
+    
+    .btn-primary:active {
+      transform: translateY(1px);
+    }
+    
+    /* Custom input styles */
+    input, textarea, select {
+      background-color: #f5f5f5 !important;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    input:focus, textarea:focus, select:focus {
+      outline: none !important;
+      background-color: #f0f0f0 !important;
+      box-shadow: 0 0 0 2px rgba(192, 0, 0, 0.2) !important;
+    }
+    
+    .card {
+      background-color: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    .card:hover {
+      box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+      transform: translateY(-3px);
+    }
+    
+    /* Page transition animation */
+    .page-transition {
+      animation: fadeIn 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Loading animation */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    
+    .loading-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 3px solid rgba(192, 0, 0, 0.1);
+      border-top-color: var(--magnetar-red);
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Persona specific styles */
+    .persona-card {
+      border-left: 4px solid var(--magnetar-red);
+    }
+    
+    .trait-tag {
+      background-color: #f0f0f0;
+      border-radius: 1rem;
+      padding: 0.25rem 0.75rem;
+      font-size: 0.875rem;
+      display: inline-block;
+      margin-right: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .progress-bar {
+      height: 0.5rem;
+      background-color: #e0e0e0;
+      border-radius: 0.25rem;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background-color: var(--magnetar-red);
+    }
+    
+    /* Prevent zoom */
+    * {
+      touch-action: manipulation;
+    }
+  </style>
+  <script>
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtNedkJo6ikNneZZdrheiWbE3Dn2B8kwQ",
+      authDomain: "ces-project-f8b4e.firebaseapp.com",
+      databaseURL: "https://ces-project-f8b4e-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "ces-project-f8b4e",
+      storageBucket: "ces-project-f8b4e.firebasestorage.app",
+      messagingSenderId: "580767851656",
+      appId: "1:580767851656:web:2c852e7edb81a6decdeb3d",
+      measurementId: "G-K73DSMWBTP"
+    };
+    
+    // Add page transition animation
+    document.addEventListener('DOMContentLoaded', function() {
+      document.body.classList.add('page-transition');
+      
+      // Initialize persona data
+      loadPersonaData();
+    });
+    
+    // Load persona data
+    function loadPersonaData() {
+      // This would typically fetch data from Firebase
+      // For now, we'll use sample data
+      const persona = {
+        name: "Entrepreneurial Leader",
+        description: "A visionary individual who identifies opportunities and mobilizes resources to create value and drive innovation.",
+        traits: [
+          "Visionary",
+          "Risk-taker",
+          "Resilient",
+          "Adaptable",
+          "Self-motivated",
+          "Creative"
+        ],
+        strengths: [
+          { name: "Innovation", value: 85 },
+          { name: "Leadership", value: 80 },
+          { name: "Problem Solving", value: 75 },
+          { name: "Communication", value: 70 },
+          { name: "Strategic Thinking", value: 90 }
+        ],
+        challenges: [
+          "Balancing multiple priorities",
+          "Delegating effectively",
+          "Managing stress during uncertainty",
+          "Maintaining work-life balance"
+        ],
+        recommendations: [
+          "Focus on building a strong network of mentors and advisors",
+          "Develop a structured approach to time management",
+          "Invest in continuous learning in your industry",
+          "Practice mindfulness to enhance decision-making"
+        ]
+      };
+      
+      // Populate the UI with persona data
+      document.getElementById('persona-name').textContent = persona.name;
+      document.getElementById('persona-description').textContent = persona.description;
+      
+      // Populate traits
+      const traitsContainer = document.getElementById('persona-traits');
+      traitsContainer.innerHTML = '';
+      persona.traits.forEach(trait => {
+        const traitElement = document.createElement('span');
+        traitElement.className = 'trait-tag';
+        traitElement.textContent = trait;
+        traitsContainer.appendChild(traitElement);
+      });
+      
+      // Populate strengths
+      const strengthsContainer = document.getElementById('persona-strengths');
+      strengthsContainer.innerHTML = '';
+      persona.strengths.forEach(strength => {
+        const strengthElement = document.createElement('div');
+        strengthElement.className = 'mb-3';
+        strengthElement.innerHTML = `
+          <div class="flex justify-between mb-1">
+            <span>${strength.name}</span>
+            <span>${strength.value}%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: ${strength.value}%"></div>
+          </div>
+        `;
+        strengthsContainer.appendChild(strengthElement);
+      });
+      
+      // Populate challenges
+      const challengesContainer = document.getElementById('persona-challenges');
+      challengesContainer.innerHTML = '';
+      persona.challenges.forEach(challenge => {
+        const challengeElement = document.createElement('li');
+        challengeElement.className = 'mb-2';
+        challengeElement.textContent = challenge;
+        challengesContainer.appendChild(challengeElement);
+      });
+      
+      // Populate recommendations
+      const recommendationsContainer = document.getElementById('persona-recommendations');
+      recommendationsContainer.innerHTML = '';
+      persona.recommendations.forEach(recommendation => {
+        const recommendationElement = document.createElement('li');
+        recommendationElement.className = 'mb-2';
+        recommendationElement.textContent = recommendation;
+        recommendationsContainer.appendChild(recommendationElement);
+      });
+    }
+    
+    // Prevent zoom on double-tap
+    document.addEventListener('touchstart', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Prevent zoom on pinch
+    document.addEventListener('touchmove', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Prevent zoom on double-tap
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(event) {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, { passive: false });
+  </script>
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+  <!-- Loading overlay -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="loading-spinner"></div>
+  </div>
+  
+  <!-- Header -->
+  <header class="bg-white shadow-sm p-4 flex items-center justify-between sticky top-0 z-10">
+    <a href="profile.html" class="flex items-center">
+      <span class="material-icons text-gray-600 mr-2">arrow_back</span>
+      <h1 class="text-xl font-bold">Your Persona</h1>
+    </a>
+    <div class="flex space-x-2">
+      <button id="share-button" class="p-2 rounded-full hover:bg-gray-100">
+        <span class="material-icons text-gray-600">share</span>
+      </button>
+    </div>
+  </header>
+  
+  <main class="container mx-auto px-4 py-6 pb-20 max-w-lg">
+    <!-- Persona Overview -->
+    <div class="card p-6 mb-6 persona-card">
+      <h2 id="persona-name" class="text-2xl font-bold mb-2">Entrepreneurial Leader</h2>
+      <p id="persona-description" class="text-gray-600 mb-4">
+        A visionary individual who identifies opportunities and mobilizes resources to create value and drive innovation.
+      </p>
+      
+      <h3 class="font-medium mb-2">Key Traits</h3>
+      <div id="persona-traits" class="mb-4">
+        <!-- Traits will be populated here -->
+      </div>
+    </div>
+    
+    <!-- Strengths -->
+    <div class="card p-6 mb-6">
+      <h3 class="font-bold text-lg mb-4">Your Strengths</h3>
+      <div id="persona-strengths">
+        <!-- Strengths will be populated here -->
+      </div>
+    </div>
+    
+    <!-- Challenges -->
+    <div class="card p-6 mb-6">
+      <h3 class="font-bold text-lg mb-4">Potential Challenges</h3>
+      <ul id="persona-challenges" class="list-disc pl-5">
+        <!-- Challenges will be populated here -->
+      </ul>
+    </div>
+    
+    <!-- Recommendations -->
+    <div class="card p-6">
+      <h3 class="font-bold text-lg mb-4">Recommendations</h3>
+      <ul id="persona-recommendations" class="list-disc pl-5">
+        <!-- Recommendations will be populated here -->
+      </ul>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="mt-6 flex space-x-4">
+      <button class="flex-1 bg-gray-100 text-gray-800 font-medium py-3 px-4 rounded-lg flex items-center justify-center">
+        <span class="material-icons mr-2">assessment</span>
+        Take Assessment
+      </button>
+      <button class="flex-1 btn-primary text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center">
+        <span class="material-icons mr-2">psychology</span>
+        Explore Insights
+      </button>
+    </div>
+  </main>
+  
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
+          console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        }, function(err) {
+          console.log('ServiceWorker registration failed: ', err);
+        });
+      });
+    }
+  </script>
+</body>
+</html>

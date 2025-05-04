@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Magnetar - Messages</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#C00000">
+  <meta name="description" content="Magnetar - Messages">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Magnetar">
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --magnetar-red: #C00000;
+      --text-dark: #1A1A1A;
+    }
+    
+    body {
+      font-family: 'Open Sans', sans-serif;
+      color: var(--text-dark);
+      background-color: #f5f5f5;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    h1, h2, h3, h4, h5, h6, .heading {
+      font-family: 'Roboto', sans-serif;
+    }
+    
+    .btn-primary {
+      background-color: var(--magnetar-red);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    .btn-primary:hover, .btn-primary:active {
+      background-color: #A00000;
+      transform: translateY(-1px);
+    }
+    
+    .btn-primary:active {
+      transform: translateY(1px);
+    }
+    
+    /* Loading animation */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    
+    .loading-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 3px solid rgba(192, 0, 0, 0.1);
+      border-top-color: var(--magnetar-red);
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Bottom nav hover animation */
+    .nav-item {
+      transition: all 0.3s ease;
+    }
+    
+    .nav-item:hover {
+      transform: translateY(-5px);
+    }
+
+    /* Center button styles */
+    .center-button {
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      transform: translateY(-10px);
+      transition: all 0.3s ease;
+    }
+
+    .center-button:hover {
+      transform: translateY(-15px);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+    }
+    
+    /* Chat item animation */
+    .chat-item {
+      transition: all 0.3s ease;
+    }
+    
+    .chat-item:hover {
+      transform: translateX(5px);
+      background-color: rgba(245, 245, 245, 0.7);
+    }
+    
+    /* Message bubble styles */
+    .message-bubble {
+      max-width: 80%;
+      border-radius: 18px;
+      padding: 10px 15px;
+      margin-bottom: 8px;
+      position: relative;
+    }
+    
+    .message-sent {
+      background-color: #DCF8C6;
+      align-self: flex-end;
+      border-bottom-right-radius: 5px;
+    }
+    
+    .message-received {
+      background-color: white;
+      align-self: flex-start;
+      border-bottom-left-radius: 5px;
+    }
+    
+    /* Message time */
+    .message-time {
+      font-size: 0.7rem;
+      color: #999;
+      margin-top: 2px;
+      text-align: right;
+    }
+  </style>
+  <script>
+    // Prevent zoom on double-tap
+    document.addEventListener('touchstart', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Prevent zoom on pinch
+    document.addEventListener('touchmove', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Prevent zoom on double-tap
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(event) {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, { passive: false });
+  </script>
+</head>
+
+<body class="bg-gray-100 flex flex-col mx-auto min-h-screen max-w-sm w-full">
+  <!-- Loading overlay -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <!-- Header -->
+  <header class="bg-white text-gray-800 p-4 text-lg font-semibold flex items-center justify-between sticky top-0 z-50 shadow-sm">
+    <!-- Left: User Avatar -->
+    <a href="profile.html" class="flex items-center">
+      <img src="https://i.pravatar.cc/300?img=8" alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-gray-300" />
+    </a>
+
+    <!-- Right: Notifications and Messages -->
+    <div class="flex items-center space-x-6">
+      <div class="relative cursor-pointer" onclick="window.location.href='notifications.html'">
+        <span class="material-icons text-2xl text-gray-700">notifications</span>
+        <span id="notificationBadge"
+            class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 hidden">0</span>
+      </div>
+      <span class="material-icons text-2xl cursor-pointer text-gray-700">search</span>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col items-center p-4 w-full overflow-y-auto pb-24">
+    <!-- Tabs -->
+    <div class="w-full max-w-md mb-4">
+      <div class="flex bg-gray-200 rounded-lg p-1">
+        <button class="flex-1 py-2 rounded-lg bg-white font-medium text-gray-800 shadow-sm">Chats</button>
+        <button class="flex-1 py-2 rounded-lg font-medium text-gray-600">Groups</button>
+        <button class="flex-1 py-2 rounded-lg font-medium text-gray-600">Calls</button>
+      </div>
+    </div>
+    
+    <!-- Chat List -->
+    <div class="w-full max-w-md">
+      <!-- Chat Item 1 -->
+      <div class="chat-item bg-white rounded-lg shadow-md p-4 mb-3 cursor-pointer" onclick="openChat('support')">
+        <div class="flex items-center">
+          <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mr-3">
+            <span class="material-icons text-red-600">support_agent</span>
+          </div>
+          <div class="flex-1">
+            <div class="flex justify-between items-center">
+              <h3 class="font-medium">Support Team</h3>
+              <span class="text-xs text-gray-500">10:30 AM</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <p class="text-sm text-gray-600 truncate">How can we help you today?</p>
+              <span class="bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">2</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Chat Item 2 -->
+      <div class="chat-item bg-white rounded-lg shadow-md p-4 mb-3 cursor-pointer" onclick="openChat('john')">
+        <div class="flex items-center">
+          <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+            <span class="material-icons text-blue-600">person</span>
+          </div>
+          <div class="flex-1">
+            <div class="flex justify-between items-center">
+              <h3 class="font-medium">John Smith</h3>
+              <span class="text-xs text-gray-500">Yesterday</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <p class="text-sm text-gray-600 truncate">Thanks for the information!</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Chat Item 3 -->
+      <div class="chat-item bg-white rounded-lg shadow-md p-4 mb-3 cursor-pointer" onclick="openChat('sarah')">
+        <div class="flex items-center">
+          <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mr-3">
+            <span class="material-icons text-purple-600">person</span>
+          </div>
+          <div class="flex-1">
+            <div class="flex justify-between items-center">
+              <h3 class="font-medium">Sarah Johnson</h3>
+              <span class="text-xs text-gray-500">Monday</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <p class="text-sm text-gray-600 truncate">Did you see the latest course?</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Chat Item 4 -->
+      <div class="chat-item bg-white rounded-lg shadow-md p-4 mb-3 cursor-pointer" onclick="openChat('academy')">
+        <div class="flex items-center">
+          <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mr-3">
+            <span class="material-icons text-green-600">school</span>
+          </div>
+          <div class="flex-1">
+            <div class="flex justify-between items-center">
+              <h3 class="font-medium">Academy Team</h3>
+              <span class="text-xs text-gray-500">Last week</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <p class="text-sm text-gray-600 truncate">New course available: Advanced Trading</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Chat Item 5 -->
+      <div class="chat-item bg-white rounded-lg shadow-md p-4 cursor-pointer" onclick="openChat('wallet')">
+        <div class="flex items-center">
+          <div class="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center mr-3">
+            <span class="material-icons text-yellow-600">account_balance_wallet</span>
+          </div>
+          <div class="flex-1">
+            <div class="flex justify-between items-center">
+              <h3 class="font-medium">Wallet Notifications</h3>
+              <span class="text-xs text-gray-500">2 weeks ago</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <p class="text-sm text-gray-600 truncate">Your transaction has been completed</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- New Message Button -->
+  <div class="fixed bottom-20 right-4">
+    <button class="w-14 h-14 rounded-full bg-red-600 text-white flex items-center justify-center shadow-lg">
+      <span class="material-icons">edit</span>
+    </button>
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bg-white w-full max-w-sm flex justify-around items-center py-2 fixed bottom-0 left-1/2 transform -translate-x-1/2 shadow-lg">
+    <div class="nav-item cursor-pointer" onclick="window.location.href='social.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">people</span>
+    </div>
+    <div class="nav-item cursor-pointer" onclick="window.location.href='wallet.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">account_balance_wallet</span>
+    </div>
+    <div class="center-button cursor-pointer shadow-xl" onclick="window.location.href='index.html'">
+      <div class="w-12 h-12 rounded-full bg-red-600 flex items-center justify-center">
+        <div class="w-8 h-8 bg-contain bg-center bg-no-repeat rounded-full"
+            style="background-image: url('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20250127_191600_0000-6AwFlDvh6mQeKcJJwH3Jlyef5Qpeic.png')"></div>
+      </div>
+    </div>
+    <div class="nav-item cursor-pointer" onclick="window.location.href='academy.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">school</span>
+    </div>
+    <div class="nav-item cursor-pointer" onclick="window.location.href='settings.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">settings</span>
+    </div>
+  </div>
+
+  <!-- Chat Detail Modal -->
+  <div id="chat-modal" class="fixed inset-0 bg-white z-50 flex flex-col hidden">
+    <!-- Chat Header -->
+    <div class="bg-white p-4 flex items-center justify-between shadow-sm">
+      <div class="flex items-center">
+        <span class="material-icons text-2xl cursor-pointer text-gray-700 mr-3" onclick="closeChat()">arrow_back</span>
+        <div id="chat-avatar" class="w-10 h-10 rounded-full flex items-center justify-center mr-3">
+          <span id="chat-avatar-icon" class="material-icons"></span>
+        </div>
+        <div>
+          <h3 id="chat-name" class="font-medium"></h3>
+          <p class="text-xs text-gray-500">Online</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-4">
+        <span class="material-icons text-gray-600 cursor-pointer">call</span>
+        <span class="material-icons text-gray-600 cursor-pointer">more_vert</span>
+      </div>
+    </div>
+    
+    <!-- Chat Messages -->
+    <div id="chat-messages" class="flex-1 p-4 overflow-y-auto bg-gray-100 flex flex-col">
+      <!-- Messages will be dynamically added here -->
+    </div>
+    
+    <!-- Chat Input -->
+    <div class="bg-white p-3 flex items-center border-t">
+      <span class="material-icons text-gray-600 mx-2 cursor-pointer">attach_file</span>
+      <input type="text" id="message-input" placeholder="Type a message" class="flex-1 border-0 outline-none px-3 py-2">
+      <span class="material-icons text-gray-600 mx-2 cursor-pointer">mic</span>
+      <button id="send-button" class="w-10 h-10 rounded-full bg-red-600 text-white flex items-center justify-center">
+        <span class="material-icons">send</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js";
+    import { getDatabase, ref, get, set, update, query, orderByChild, limitToLast, onValue } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtNedkJo6ikNneZZdrheiWbE3Dn2B8kwQ",
+      authDomain: "ces-project-f8b4e.firebaseapp.com",
+      databaseURL: "https://ces-project-f8b4e-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "ces-project-f8b4e",
+      storageBucket: "ces-project-f8b4e.firebasestorage.app",
+      messagingSenderId: "580767851656",
+      appId: "1:580767851656:web:2c852e7edb81a6decdeb3d",
+      measurementId: "G-K73DSMWBTP"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    
+    // DOM elements
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const notificationBadge = document.getElementById('notificationBadge');
+    
+    // Check authentication state
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        console.log('User is authenticated:', user.uid);
+        // Hide loading
+        loadingOverlay.classList.remove('active');
+      } else {
+        // Redirect to login if not authenticated
+        window.location.href = 'email-login.html';
+      }
+    });
+  </script>
+  
+  <script>
+    // Chat data
+    const chatData = {
+      'support': {
+        name: 'Support Team',
+        avatar: 'support_agent',
+        avatarBg: 'bg-red-100',
+        avatarColor: 'text-red-600',
+        messages: [
+          { text: 'Hello! How can we help you today?', sent: false, time: '10:25 AM' },
+          { text: 'I have a question about my subscription.', sent: true, time: '10:26 AM' },
+          { text: 'Of course! What would you like to know about your subscription?', sent: false, time: '10:28 AM' },
+          { text: 'When will my next payment be processed?', sent: true, time: '10:29 AM' },
+          { text: 'Your next payment will be processed on June 15th. Would you like to change your billing date?', sent: false, time: '10:30 AM' }
+        ]
+      },
+      'john': {
+        name: 'John Smith',
+        avatar: 'person',
+        avatarBg: 'bg-blue-100',
+        avatarColor: 'text-blue-600',
+        messages: [
+          { text: 'Hey, did you check out the new trading platform?', sent: false, time: 'Yesterday, 3:45 PM' },
+          { text: 'Yes, it looks great! Much more intuitive than the old one.', sent: true, time: 'Yesterday, 4:12 PM' },
+          { text: 'I agree. The charts are much better too.', sent: false, time: 'Yesterday, 4:15 PM' },
+          { text: 'Thanks for the information!', sent: false, time: 'Yesterday, 4:30 PM' }
+        ]
+      },
+      'sarah': {
+        name: 'Sarah Johnson',
+        avatar: 'person',
+        avatarBg: 'bg-purple-100',
+        avatarColor: 'text-purple-600',
+        messages: [
+          { text: 'Have you seen the new course on technical analysis?', sent: false, time: 'Monday, 2:15 PM' },
+          { text: 'Not yet, is it good?', sent: true, time: 'Monday, 2:30 PM' },
+          { text: 'Yes, very comprehensive! I learned a lot about chart patterns.', sent: false, time: 'Monday, 2:35 PM' },
+          { text: 'I\'ll check it out, thanks!', sent: true, time: 'Monday, 2:40 PM' },
+          { text: 'Did you see the latest course?', sent: false, time: 'Monday, 5:20 PM' }
+        ]
+      },
+      'academy': {
+        name: 'Academy Team',
+        avatar: 'school',
+        avatarBg: 'bg-green-100',
+        avatarColor: 'text-green-600',
+        messages: [
+          { text: 'New course available: Introduction to Cryptocurrency', sent: false, time: 'Last week' },
+          { text: 'Thanks for letting me know!', sent: true, time: 'Last week' },
+          { text: 'You\'re welcome! We also have a webinar this Friday at 3 PM.', sent: false, time: 'Last week' },
+          { text: 'New course available: Advanced Trading', sent: false, time: 'Last week' }
+        ]
+      },
+      'wallet': {
+        name: 'Wallet Notifications',
+        avatar: 'account_balance_wallet',
+        avatarBg: 'bg-yellow-100',
+        avatarColor: 'text-yellow-600',
+        messages: [
+          { text: 'Your deposit of $500 has been confirmed.', sent: false, time: '2 weeks ago' },
+          { text: 'Thank you for the update.', sent: true, time: '2 weeks ago' },
+          { text: 'Your transaction has been completed', sent: false, time: '2 weeks ago' }
+        ]
+      }
+    };
+    
+    // DOM elements for chat
+    const chatModal = document.getElementById('chat-modal');
+    const chatName = document.getElementById('chat-name');
+    const chatAvatar = document.getElementById('chat-avatar');
+    const chatAvatarIcon = document.getElementById('chat-avatar-icon');
+    const chatMessages = document.getElementById('chat-messages');
+    const messageInput = document.getElementById('message-input');
+    const sendButton = document.getElementById('send-button');
+    
+    let currentChat = null;
+    
+    // Open chat
+    function openChat(chatId) {
+      currentChat = chatId;
+      const chat = chatData[chatId];
+      
+      // Set chat details
+      chatName.textContent = chat.name;
+      chatAvatar.className = `w-10 h-10 rounded-full ${chat.avatarBg} flex items-center justify-center`;
+      chatAvatarIcon.className = `material-icons ${chat.avatarColor}`;
+      chatAvatarIcon.textContent = chat.avatar;
+      
+      // Clear previous messages
+      chatMessages.innerHTML = '';
+      
+      // Add messages
+      chat.messages.forEach(message => {
+        addMessageToChat(message);
+      });
+      
+      // Scroll to bottom
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+      
+      // Show chat modal
+      chatModal.classList.remove('hidden');
+    }
+    
+    // Close chat
+    function closeChat() {
+      chatModal.classList.add('hidden');
+      currentChat = null;
+    }
+    
+    // Add message to chat
+    function addMessageToChat(message) {
+      const messageElement = document.createElement('div');
+      messageElement.className = `message-bubble ${message.sent ? 'message-sent' : 'message-received'}`;
+      
+      const textElement = document.createElement('div');
+      textElement.textContent = message.text;
+      
+      const timeElement = document.createElement('div');
+      timeElement.className = 'message-time';
+      timeElement.textContent = message.time;
+      
+      messageElement.appendChild(textElement);
+      messageElement.appendChild(timeElement);
+      
+      const containerElement = document.createElement('div');
+      containerElement.className = `flex ${message.sent ? 'justify-end' : 'justify-start'}`;
+      containerElement.appendChild(messageElement);
+      
+      chatMessages.appendChild(containerElement);
+    }
+    
+    // Send message
+    sendButton.addEventListener('click', () => {
+      const text = messageInput.value.trim();
+      if (text && currentChat) {
+        // Add message to UI
+        const message = {
+          text,
+          sent: true,
+          time: 'Just now'
+        };
+        
+        addMessageToChat(message);
+        
+        // Add to chat data
+        chatData[currentChat].messages.push(message);
+        
+        // Clear input
+        messageInput.value = '';
+        
+        // Scroll to bottom
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        
+        // Simulate reply after 1-2 seconds
+        setTimeout(() => {
+          if (currentChat) {
+            const replyMessage = {
+              text: getRandomReply(),
+              sent: false,
+              time: 'Just now'
+            };
+            
+            addMessageToChat(replyMessage);
+            chatData[currentChat].messages.push(replyMessage);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+          }
+        }, 1000 + Math.random() * 1000);
+      }
+    });
+    
+    // Send message on Enter key
+    messageInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        sendButton.click();
+      }
+    });
+    
+    // Random replies
+    function getRandomReply() {
+      const replies = [
+        "Thanks for your message!",
+        "I'll get back to you soon.",
+        "Got it, thanks!",
+        "That's great to hear.",
+        "Let me check and get back to you.",
+        "Is there anything else you need help with?",
+        "I appreciate your feedback.",
+        "That's an interesting point.",
+        "I understand your concern.",
+        "We're working on that feature."
+      ];
+      
+      return replies[Math.floor(Math.random() * replies.length)];
+    }
+  </script>
+</body>
+</html>

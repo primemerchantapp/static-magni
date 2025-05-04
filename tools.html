@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Magnetar - Tools</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#C00000">
+  <meta name="description" content="Magnetar - Business Tools">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Magnetar">
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --magnetar-red: #C00000;
+      --text-dark: #1A1A1A;
+    }
+    
+    body {
+      font-family: 'Open Sans', sans-serif;
+      color: var(--text-dark);
+      background-color: #f5f5f5;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    h1, h2, h3, h4, h5, h6, .heading {
+      font-family: 'Roboto', sans-serif;
+    }
+    
+    .btn-primary {
+      background-color: var(--magnetar-red);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    .btn-primary:hover, .btn-primary:active {
+      background-color: #A00000;
+      transform: translateY(-1px);
+    }
+    
+    .btn-primary:active {
+      transform: translateY(1px);
+    }
+    
+    /* Loading animation */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    
+    .loading-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 3px solid rgba(192, 0, 0, 0.1);
+      border-top-color: var(--magnetar-red);
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Tool card hover effect */
+    .tool-card {
+      transition: all 0.3s ease;
+    }
+    
+    .tool-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .tool-card:active {
+      transform: translateY(0);
+    }
+
+    /* Bottom nav hover animation */
+    .nav-item {
+      transition: all 0.3s ease;
+    }
+    
+    .nav-item:hover {
+      transform: translateY(-5px);
+    }
+
+    /* Center button styles */
+    .center-button {
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      transform: translateY(-10px);
+      transition: all 0.3s ease;
+    }
+
+    .center-button:hover {
+      transform: translateY(-15px);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+    }
+  </style>
+  <script>
+    // Prevent zoom on double-tap
+    document.addEventListener('touchstart', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Prevent zoom on pinch
+    document.addEventListener('touchmove', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Prevent zoom on double-tap
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(event) {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, { passive: false });
+  </script>
+</head>
+
+<body class="bg-gray-100 flex flex-col mx-auto min-h-screen max-w-sm w-full">
+  <!-- Loading overlay -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <!-- Header -->
+  <header class="bg-white text-gray-800 p-4 text-lg font-semibold flex items-center justify-between sticky top-0 z-50 shadow-sm">
+    <div class="flex items-center">
+      <div class="w-32 h-10 bg-no-repeat bg-center bg-contain"
+          style="background-image: url('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20250127_191600_0000-6AwFlDvh6mQeKcJJwH3Jlyef5Qpeic.png')"></div>
+    </div>
+    <div class="flex items-center space-x-6">
+      <div class="relative cursor-pointer" onclick="handleNotificationClick()">
+        <span class="material-icons text-2xl text-gray-700">notifications</span>
+        <span id="notificationBadge"
+            class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 hidden">0</span>
+      </div>
+      <span class="material-icons text-2xl cursor-pointer text-gray-700" id="logoutBtn">logout</span>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col items-center p-4 w-full overflow-y-auto pb-24 space-y-6">
+    <!-- Quick Actions -->
+    <div class="w-full">
+      <h2 class="text-lg font-bold mb-3">Quick Actions</h2>
+      <div class="grid grid-cols-3 gap-3">
+        <div class="bg-white rounded-lg p-3 shadow flex flex-col items-center text-center cursor-pointer tool-card">
+          <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-2">
+            <span class="material-icons text-red-600">qr_code_scanner</span>
+          </div>
+          <h3 class="text-sm font-medium">Scan QR</h3>
+        </div>
+        <div class="bg-white rounded-lg p-3 shadow flex flex-col items-center text-center cursor-pointer tool-card">
+          <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-2">
+            <span class="material-icons text-red-600">calculate</span>
+          </div>
+          <h3 class="text-sm font-medium">Calculator</h3>
+        </div>
+        <div class="bg-white rounded-lg p-3 shadow flex flex-col items-center text-center cursor-pointer tool-card">
+          <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-2">
+            <span class="material-icons text-red-600">note_add</span>
+          </div>
+          <h3 class="text-sm font-medium">New Note</h3>
+        </div>
+      </div>
+    </div>
+
+    <!-- Marketing Tools -->
+    <div class="w-full">
+      <h2 class="text-lg font-bold mb-3">Marketing Tools</h2>
+      <div class="space-y-3">
+        <div class="bg-white rounded-lg p-4 shadow flex items-center cursor-pointer tool-card">
+          <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+            <span class="material-icons text-blue-600">share</span>
+          </div>
+          <div class="flex-1">
+            <h3 class="font-medium">Social Media Templates</h3>
+            <p class="text-sm text-gray-600">Ready-to-use posts for your business</p>
+          </div>
+          <span class="material-icons text-gray-400">chevron_right</span>
+        </div>
+        
+        <div class="bg-white rounded-lg p-4 shadow flex items-center cursor-pointer tool-card">
+          <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mr-3">
+            <span class="material-icons text-green-600">image</span>
+          </div>
+          <div class="flex-1">
+            <h3 class="font-medium">Image Creator</h3>
+            <p class="text-sm text-gray-600">Create branded images for marketing</p>
+          </div>
+          <span class="material-icons text-gray-400">chevron_right</span>
+        </div>
+        
+        <div class="bg-white rounded-lg p-4 shadow flex items-center cursor-pointer tool-card">
+          <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mr-3">
+            <span class="material-icons text-purple-600">campaign</span>
+          </div>
+          <div class="flex-1">
+            <h3 class="font-medium">Email Campaigns</h3>
+            <p class="text-sm text-gray-600">Create and send email newsletters</p>
+          </div>
+          <span class="material-icons text-gray-400">chevron_right</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Business Management -->
+    <div class="w-full">
+      <h2 class="text-lg font-bold mb-3">Business Management</h2>
+      <div class="space-y-3">
+        <div class="bg-white rounded-lg p-4 shadow flex items-center cursor-pointer tool-card">
+          <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center mr-3">
+            <span class="material-icons text-yellow-600">people</span>
+          </div>
+          <div class="flex-1">
+            <h3 class="font-medium">Team Management</h3>
+            <p class="text-sm text-gray-600">Organize and track your team members</p>
+          </div>
+          <span class="material-icons text-gray-400">chevron_right</span>
+        </div>
+        
+        <div class="bg-white rounded-lg p-4 shadow flex items-center cursor-pointer tool-card">
+          <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center mr-3">
+            <span class="material-icons text-indigo-600">event</span>
+          </div>
+          <div class="flex-1">
+            <h3 class="font-medium">Event Planner</h3>
+            <p class="text-sm text-gray-600">Schedule and manage business events</p>
+          </div>
+          <span class="material-icons text-gray-400">chevron_right</span>
+        </div>
+        
+        <div class="bg-white rounded-lg p-4 shadow flex items-center cursor-pointer tool-card">
+          <div class="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center mr-3">
+            <span class="material-icons text-teal-600">assessment</span>
+          </div>
+          <div class="flex-1">
+            <h3 class="font-medium">Performance Analytics</h3>
+            <p class="text-sm text-gray-600">Track your business metrics</p>
+          </div>
+          <span class="material-icons text-gray-400">chevron_right</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Financial Tools -->
+    <div class="w-full">
+      <h2 class="text-lg font-bold mb-3">Financial Tools</h2>
+      <div class="space-y-3">
+        <div class="bg-white rounded-lg p-4 shadow flex items-center cursor-pointer tool-card">
+          <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mr-3">
+            <span class="material-icons text-green-600">attach_money</span>
+          </div>
+          <div class="flex-1">
+            <h3 class="font-medium">Income Calculator</h3>
+            <p class="text-sm text-gray-600">Calculate potential earnings</p>
+          </div>
+          <span class="material-icons text-gray-400">chevron_right</span>
+        </div>
+        
+        <div class="bg-white rounded-lg p-4 shadow flex items-center cursor-pointer tool-card">
+          <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+            <span class="material-icons text-blue-600">receipt_long</span>
+          </div>
+          <div class="flex-1">
+            <h3 class="font-medium">Expense Tracker</h3>
+            <p class="text-sm text-gray-600">Track business expenses</p>
+          </div>
+          <span class="material-icons text-gray-400">chevron_right</span>
+        </div>
+        
+        <div class="bg-white rounded-lg p-4 shadow flex items-center cursor-pointer tool-card">
+          <div class="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center mr-3">
+            <span class="material-icons text-orange-600">pie_chart</span>
+          </div>
+          <div class="flex-1">
+            <h3 class="font-medium">Commission Calculator</h3>
+            <p class="text-sm text-gray-600">Calculate team commissions</p>
+          </div>
+          <span class="material-icons text-gray-400">chevron_right</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Bottom Nav -->
+  <div class="bg-white border-t border-gray-300 w-full max-w-sm flex justify-around items-center py-2 fixed bottom-0 left-1/2 transform -translate-x-1/2">
+    <div class="nav-item cursor-pointer" onclick="window.location.href='social.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">people</span>
+    </div>
+    <div class="nav-item cursor-pointer" onclick="window.location.href='wallet.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">account_balance_wallet</span>
+    </div>
+    <div class="center-button cursor-pointer" onclick="window.location.href='index.html'">
+      <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center shadow-md">
+        <div class="w-8 h-8 bg-contain bg-center bg-no-repeat"
+            style="background-image: url('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20250127_191600_0000-6AwFlDvh6mQeKcJJwH3Jlyef5Qpeic.png')"></div>
+      </div>
+    </div>
+    <div class="nav-item cursor-pointer" onclick="window.location.href='academy.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">school</span>
+    </div>
+    <div class="nav-item cursor-pointer" onclick="window.location.href='settings.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">settings</span>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js";
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtNedkJo6ikNneZZdrheiWbE3Dn2B8kwQ",
+      authDomain: "ces-project-f8b4e.firebaseapp.com",
+      databaseURL: "https://ces-project-f8b4e-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "ces-project-f8b4e",
+      storageBucket: "ces-project-f8b4e.firebasestorage.app",
+      messagingSenderId: "580767851656",
+      appId: "1:580767851656:web:2c852e7edb81a6decdeb3d",
+      measurementId: "G-K73DSMWBTP"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    
+    // DOM elements
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const notificationBadge = document.getElementById('notificationBadge');
+    
+    // Show loading initially
+    loadingOverlay.classList.add('active');
+    
+    // Check authentication state
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is signed in
+        console.log("User is signed in:", user.uid);
+        // Hide loading
+        loadingOverlay.classList.remove('active');
+      } else {
+        // User is signed out, redirect to login
+        window.location.href = 'email-login.html';
+      }
+    });
+    
+    // Handle logout
+    logoutBtn.addEventListener('click', () => {
+      auth.signOut()
+        .then(() => {
+          window.location.href = 'email-login.html';
+        })
+        .catch(err => console.error('Logout error:', err));
+    });
+    
+    // Function to update notification badge count
+    function updateNotificationBadge(count) {
+      if (count > 0) {
+        notificationBadge.textContent = count;
+        notificationBadge.classList.remove('hidden');
+      } else {
+        notificationBadge.classList.add('hidden');
+      }
+    }
+    
+    // Handle notification icon click
+    function handleNotificationClick() {
+      window.location.href = 'notifications.html';
+    }
+    
+    // Add click event listeners to tool cards
+    document.querySelectorAll('.tool-card').forEach(card => {
+      card.addEventListener('click', function() {
+        // Show loading animation
+        loadingOverlay.classList.add('active');
+        
+        // Get tool name
+        const toolName = this.querySelector('h3').textContent;
+        
+        // Simulate loading delay
+        setTimeout(() => {
+          loadingOverlay.classList.remove('active');
+          
+          // For demo purposes, show an alert with the tool name
+          alert(`${toolName} tool will be available in the next update!`);
+        }, 800);
+      });
+    });
+  </script>
+</body>
+</html>

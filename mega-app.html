@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Magnetar - Mega 20-in-1 App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#C00000">
+  <meta name="description" content="Magnetar - Mega 20-in-1 App">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Magnetar">
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --magnetar-red: #C00000;
+      --text-dark: #1A1A1A;
+    }
+    
+    body {
+      font-family: 'Open Sans', sans-serif;
+      color: var(--text-dark);
+      background-color: #f5f5f5;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    h1, h2, h3, h4, h5, h6, .heading {
+      font-family: 'Roboto', sans-serif;
+    }
+    
+    .btn-primary {
+      background-color: var(--magnetar-red);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    .btn-primary:hover, .btn-primary:active {
+      background-color: #A00000;
+      transform: translateY(-1px);
+    }
+    
+    .btn-primary:active {
+      transform: translateY(1px);
+    }
+    
+    /* Loading animation */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    
+    .loading-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 3px solid rgba(192, 0, 0, 0.1);
+      border-top-color: var(--magnetar-red);
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Bottom nav hover animation */
+    .nav-item {
+      transition: all 0.3s ease;
+    }
+    
+    .nav-item:hover {
+      transform: translateY(-5px);
+    }
+
+    /* Center button styles */
+    .center-button {
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      transform: translateY(-10px);
+      transition: all 0.3s ease;
+    }
+
+    .center-button:hover {
+      transform: translateY(-15px);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+    }
+
+    /* App item styles */
+    .app-item {
+      transition: all 0.2s ease;
+    }
+
+    .app-item:active {
+      transform: scale(0.98);
+    }
+
+    .app-item:hover {
+      background-color: #f9fafb;
+    }
+
+    .active-section {
+      display: block;
+    }
+
+    .hidden-section {
+      display: none;
+    }
+
+    .app-nav-link {
+      transition: background-color 0.2s, transform 0.2s;
+    }
+
+    .app-nav-link:hover {
+      transform: translateX(5px);
+    }
+  </style>
+  <script>
+    // Prevent zoom on double-tap
+    document.addEventListener('touchstart', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Prevent zoom on pinch
+    document.addEventListener('touchmove', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Prevent zoom on double-tap
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(event) {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, { passive: false });
+  </script>
+</head>
+
+<body class="bg-gray-100 flex flex-col mx-auto min-h-screen max-w-sm w-full">
+  <!-- Loading overlay -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <!-- Header -->
+  <header class="bg-white text-gray-800 p-4 text-lg font-semibold flex items-center justify-between sticky top-0 z-50 shadow-sm">
+    <div class="flex items-center">
+      <a href="apps.html" class="mr-2">
+        <span class="material-icons">arrow_back</span>
+      </a>
+      <span>Mega 20-in-1 App</span>
+    </div>
+    <div class="flex items-center space-x-6">
+      <div class="relative cursor-pointer" onclick="handleNotificationClick()">
+        <span class="material-icons text-2xl text-gray-700">notifications</span>
+        <span id="notificationBadge"
+            class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 hidden">0</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Nav for apps -->
+  <nav class="bg-white shadow p-4 flex flex-col space-y-2">
+    <button class="app-nav-link text-left px-3 py-2 rounded hover:bg-gray-50" onclick="showApp('app1')">1) QR Code Generator</button>
+    <button class="app-nav-link text-left px-3 py-2 rounded hover:bg-gray-50" onclick="showApp('app2')">2) QR Code Scanner</button>
+    <button class="app-nav-link text-left px-3 py-2 rounded hover:bg-gray-50" onclick="showApp('app3')">3) PDF to Word</button>
+    <button class="app-nav-link text-left px-3 py-2 rounded hover:bg-gray-50" onclick="showApp('app4')">4) PDF to Excel</button>
+    <button class="app-nav-link text-left px-3 py-2 rounded hover:bg-gray-50" onclick="showApp('app5')">5) PDF to CSV</button>
+    <button class="app-nav-link text-left px-3 py-2 rounded hover:bg-gray-50" onclick="showApp('app6')">6) YouTube Downloader</button>
+    <button class="app-nav-link text-left px-3 py-2 rounded hover:bg-gray-50" onclick="showApp('app7')">7) YouTube to MP3</button>
+    <button class="app-nav-link text-left px-3 py-2 rounded hover:bg-gray-50" onclick="showApp('app8')">8) Image Compressor</button>
+    <button class="app-nav-link text-left px-3 py-2 rounded hover:bg-gray-50" onclick="showApp('app9')">9) File Share</button>
+    <button class="app-nav-link text-left px-3 py-2 rounded hover:bg-gray-50" onclick="showApp('app10')">10) Text Translator</button>
+    <button class="app-nav-link text-left px-3 py-2 rounded hover:bg-gray-50" onclick="showApp('app11')">11) Text to Speech</button>
+    <button class="app-nav-link text-left px-3 py-2 rounded hover:bg-gray-50" onclick="showApp('app12')">12) Speech to Text</button>
+    <button class="app-nav-link text-left px-3 py-2 rounded hover:bg-gray-50" onclick="showApp('app13')">13) Currency Converter</button>
+    <button class="app-nav-link text-left px-3 py-2 rounded hover:bg-gray-50" onclick="showApp('app14')">14) Weather Checker</button>
+    <button class="app-nav-link text-left px-3 py-2 rounded hover:bg-gray-50" onclick="showApp('app15')">15) Notes App</button>
+    <button class="app-nav-link text-left px-3 py-2 rounded hover:bg-gray-50" onclick="showApp('app16')">16) To-Do List</button>
+    <button class="app-nav-link text-left px-3 py-2 rounded hover:bg-gray-50" onclick="showApp('app17')">17) Password Generator</button>
+    <button class="app-nav-link text-left px-3 py-2 rounded hover:bg-gray-50" onclick="showApp('app18')">18) Random Quote</button>
+    <button class="app-nav-link text-left px-3 py-2 rounded hover:bg-gray-50" onclick="showApp('app19')">19) Image Resizer</button>
+    <button class="app-nav-link text-left px-3 py-2 rounded hover:bg-gray-50" onclick="showApp('app20')">20) Age Calculator</button>
+  </nav>
+
+  <!-- Main container for apps -->
+  <main class="p-4 space-y-4">
+
+    <!-- 1) QR Code Generator -->
+    <section id="app1" class="hidden-section bg-white p-4 rounded shadow">
+      <h2 class="text-lg font-semibold mb-2">QR Code Generator</h2>
+      <p class="text-sm text-gray-600 mb-3">Enter text or URL to generate a QR code.</p>
+      <input type="text" id="qrInput" class="border p-2 w-full mb-2" placeholder="Enter text or URL" />
+      <button class="bg-red-600 text-white px-4 py-2 rounded" onclick="generateQRCode()">Generate QR</button>
+      <div id="qrResult" class="mt-3"></div>
+    </section>
+
+    <!-- 2) QR Code Scanner -->
+    <section id="app2" class="hidden-section bg-white p-4 rounded shadow">
+      <h2 class="text-lg font-semibold mb-2">QR Code Scanner</h2>
+      <div id="qrScanner" class="my-3">
+        <!-- We'll embed a scanner stream or use a library like html5-qrcode -->
+        <button class="bg-red-600 text-white px-4 py-2 rounded" onclick="startQRScanner()">Start Scanner</button>
+        <video id="qrVideo" class="mt-3 w-full rounded" autoplay muted playsinline style="display:none;"></video>
+        <p id="qrScanOutput" class="mt-2 text-sm font-medium text-gray-800"></p>
+      </div>
+    </section>
+
+    <!-- 3) PDF to Word -->
+    <section id="app3" class="hidden-section bg-white p-4 rounded shadow">
+      <h2 class="text-lg font-semibold mb-2">PDF to Word</h2>
+      <p class="text-sm text-gray-600">Select a PDF to convert to Word format.</p>
+      <input type="file" id="pdfToWordFile" accept="application/pdf" class="mt-2 mb-2" />
+      <button class="bg-red-600 text-white px-4 py-2 rounded" onclick="convertPDFtoWord()">Convert</button>
+      <p id="pdfToWordStatus" class="text-sm mt-3"></p>
+    </section>
+
+    <!-- 4) PDF to Excel -->
+    <section id="app4" class="hidden-section bg-white p-4 rounded shadow">
+      <h2 class="text-lg font-semibold mb-2">PDF to Excel</h2>
+      <p class="text-sm text-gray-600">Select a PDF to convert to Excel format.</p>
+      <input type="file" id="pdfToExcelFile" accept="application/pdf" class="mt-2 mb-2" />
+      <button class="bg-red-600 text-white px-4 py-2 rounded" onclick="convertPDFtoExcel()">Convert</button>
+      <p id="pdfToExcelStatus" class="text-sm mt-3"></p>
+    </section>
+
+    <!-- 5) PDF to CSV -->
+    <section id="app5" class="hidden-section bg-white p-4 rounded shadow">
+      <h2 class="text-lg font-semibold mb-2">PDF to CSV</h2>
+      <p class="text-sm text-gray-600">Select a PDF to convert to CSV format.</p>
+      <input type="file" id="pdfToCsvFile" accept="application/pdf" class="mt-2 mb-2" />
+      <button class="bg-red-600 text-white px-4 py-2 rounded" onclick="convertPDFtoCSV()">Convert</button>
+      <p id="pdfToCsvStatus" class="text-sm mt-3"></p>
+    </section>
+
+    <!-- 6) YouTube Downloader -->
+    <section id="app6" class="hidden-section bg-white p-4 rounded shadow">
+      <h2 class="text-lg font-semibold mb-2">YouTube Downloader</h2>
+      <p class="text-sm text-gray-600">Enter a YouTube URL to download.</p>
+      <input type="text" id="ytDownloadUrl" class="border p-2 w-full mb-2" placeholder="YouTube URL" />
+      <button class="bg-red-600 text-white px-4 py-2 rounded" onclick="downloadYoutubeVideo()">Download</button>
+      <p id="ytDownloadStatus" class="text-sm mt-3"></p>
+    </section>
+
+    <!-- 7) YouTube to MP3 -->
+    <section id="app7" class="hidden-section bg-white p-4 rounded shadow">
+      <h2 class="text-lg font-semibold mb-2">YouTube to MP3</h2>
+      <p class="text-sm text-gray-600">Enter a YouTube URL to convert to MP3.</p>
+      <input type="text" id="ytMp3Url" class="border p-2 w-full mb-2" placeholder="YouTube URL" />
+      <button class="bg-red-600 text-white px-4 py-2 rounded" onclick="convertYoutubeToMP3()">Convert</button>
+      <p id="ytMp3Status" class="text-sm mt-3"></p>
+    </section>
+
+    <!-- 8) Image Compressor -->
+    <section id="app8" class="hidden-section bg-white p-4 rounded shadow">
+      <h2 class="text-lg font-semibold mb-2">Image Compressor</h2>
+      <input type="file" id="imageCompressorFile" accept="image/*" class="mb-2" />
+      <button class="bg-red-600 text-white px-4 py-2 rounded" onclick="compressImage()">Compress</button>
+      <p id="compressResult" class="text-sm mt-3"></p>
+    </section>
+
+    <!-- 9) File Share -->
+    <section id="app9" class="hidden-section bg-white p-4 rounded shadow">
+      <h2 class="text-lg font-semibold mb-2">File Share</h2>
+      <p class="text-sm text-gray-600">Select a file to upload and share via link.</p>
+      <input type="file" id="fileShareInput" class="mb-2" />
+      <button class="bg-red-600 text-white px-4 py-2 rounded" onclick="shareFile()">Share</button>
+      <p id="fileShareLink" class="text-sm mt-3 break-all"></p>
+    </section>
+
+    <!-- 10) Text Translator -->
+    <section id="app10" class="hidden-section bg-white p-4 rounded shadow">
+      <h2 class="text-lg font-semibold mb-2">Text Translator</h2>
+      <textarea id="translatorInput" class="border w-full p-2 mb-2" rows="2" placeholder="Enter text to translate"></textarea>
+      <button class="bg-red-600 text-white px-4 py-2 rounded" onclick="translateText()">Translate</button>
+      <p id="translatorOutput" class="mt-3 text-sm"></p>
+    </section>
+
+    <!-- 11) Text to Speech -->
+    <section id="app11" class="hidden-section bg-white p-4 rounded shadow">
+      <h2 class="text-lg font-semibold mb-2">Text to Speech</h2>
+      <textarea id="ttsInput" class="border w-full p-2 mb-2" rows="2" placeholder="Enter text"></textarea>
+      <button class="bg-red-600 text-white px-4 py-2 rounded" onclick="textToSpeech()">Speak</button>
+    </section>
+
+    <!-- 12) Speech to Text -->
+    <section id="app12" class="hidden-section bg-white p-4 rounded shadow">
+      <h2 class="text-lg font-semibold mb-2">Speech to Text</h2>
+      <button class="bg-red-600 text-white px-4 py-2 rounded" onclick="speechToText()">Start Recording</button>
+      <p id="sttOutput" class="mt-3 text-sm"></p>
+    </section>
+
+    <!-- 13) Currency Converter -->
+    <section id="app13" class="hidden-section bg-white p-4 rounded shadow">
+      <h2 class="text-lg font-semibold mb-2">Currency Converter</h2>
+      <div class="flex space-x-2 mb-2">
+        <input type="number" id="currencyAmount" class="border p-2 w-full" placeholder="Amount" />
+        <input type="text" id="currencyFrom" class="border p-2 w-1/3" placeholder="From (e.g. USD)" />
+        <input type="text" id="currencyTo" class="border p-2 w-1/3" placeholder="To (e.g. PHP)" />
+      </div>
+      <button class="bg-red-600 text-white px-4 py-2 rounded" onclick="convertCurrency()">Convert</button>
+      <p id="currencyResult" class="mt-3 text-sm"></p>
+    </section>
+
+    <!-- 14) Weather Checker -->
+    <section id="app14" class="hidden-section bg-white p-4 rounded shadow">
+      <h2 class="text-lg font-semibold mb-2">Weather Checker</h2>
+      <input type="text" id="weatherCity" class="border p-2 w-full mb-2" placeholder="City Name" />
+      <button class="bg-red-600 text-white px-4 py-2 rounded" onclick="checkWeather()">Check Weather</button>
+      <p id="weatherResult" class="mt-3 text-sm"></p>
+    </section>
+
+    <!-- 15) Notes App -->
+    <section id="app15" class="hidden-section bg-white p-4 rounded shadow">
+      <h2 class="text-lg font-semibold mb-2">Notes App</h2>
+      <textarea id="noteInput" class="border w-full p-2 mb-2" rows="2" placeholder="Write a note..."></textarea>
+      <button class="bg-red-600 text-white px-4 py-2 rounded" onclick="saveNote()">Save Note</button>
+      <div id="notesList" class="mt-3 space-y-2"></div>
+    </section>
+
+    <!-- 16) To-Do List -->
+    <section id="app16" class="hidden-section bg-white p-4 rounded shadow">
+      <h2 class="text-lg font-semibold mb-2">To-Do List</h2>
+      <input type="text" id="todoInput" class="border p-2 w-full mb-2" placeholder="New task" />
+      <button class="bg-red-600 text-white px-4 py-2 rounded" onclick="addTodo()">Add Task</button>
+      <ul id="todoList" class="mt-3 list-disc list-inside"></ul>
+    </section>
+
+    <!-- 17) Password Generator -->
+    <section id="app17" class="hidden-section bg-white p-4 rounded shadow">
+      <h2 class="text-lg font-semibold mb-2">Password Generator</h2>
+      <div class="flex items-center mb-2">
+        <label class="mr-2">Length:</label>
+        <input type="number" id="passLength" value="8" min="4" max="64" class="border p-2 w-16" />
+      </div>
+      <button class="bg-red-600 text-white px-4 py-2 rounded" onclick="generatePassword()">Generate</button>
+      <p id="passResult" class="mt-3 text-sm break-all"></p>
+    </section>
+
+    <!-- 18) Random Quote -->
+    <section id="app18" class="hidden-section bg-white p-4 rounded shadow">
+      <h2 class="text-lg font-semibold mb-2">Random Quote</h2>
+      <button class="bg-red-600 text-white px-4 py-2 rounded" onclick="getRandomQuote()">Get Quote</button>
+      <p id="quoteOutput" class="mt-3 text-sm italic"></p>
+    </section>
+
+    <!-- 19) Image Resizer -->
+    <section id="app19" class="hidden-section bg-white p-4 rounded shadow">
+      <h2 class="text-lg font-semibold mb-2">Image Resizer</h2>
+      <input type="file" id="imageResizerFile" accept="image/*" class="mb-2" />
+      <div class="flex space-x-2 mb-2">
+        <input type="number" id="resizeWidth" class="border p-2" placeholder="Width" />
+        <input type="number" id="resizeHeight" class="border p-2" placeholder="Height" />
+      </div>
+      <button class="bg-red-600 text-white px-4 py-2 rounded" onclick="resizeImage()">Resize</button>
+      <p id="resizeResult" class="mt-3 text-sm break-all"></p>
+    </section>
+
+    <!-- 20) Age Calculator -->
+    <section id="app20" class="hidden-section bg-white p-4 rounded shadow">
+      <h2 class="text-lg font-semibold mb-2">Age Calculator</h2>
+      <p class="text-sm text-gray-600 mb-2">Enter your birth date:</p>
+      <input type="date" id="birthDate" class="border p-2 w-full mb-2" />
+      <button class="bg-red-600 text-white px-4 py-2 rounded" onclick="calculateAge()">Calculate Age</button>
+      <p id="ageResult" class="mt-3 text-sm"></p>
+    </section>
+
+  </main>
+
+  <!-- Bottom Nav -->
+  <div class="bg-white border-t border-gray-300 w-full max-w-sm flex justify-around items-center py-2 fixed bottom-0 left-1/2 transform -translate-x-1/2">
+    <div class="nav-item cursor-pointer" onclick="window.location.href='social.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">people</span>
+    </div>
+    <div class="nav-item cursor-pointer" onclick="window.location.href='wallet.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">account_balance_wallet</span>
+    </div>
+    <div class="center-button cursor-pointer" onclick="window.location.href='index.html'">
+      <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center shadow-md">
+        <div class="w-8 h-8 bg-contain bg-center bg-no-repeat"
+            style="background-image: url('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20250127_191600_0000-6AwFlDvh6mQeKcJJwH3Jlyef5Qpeic.png')"></div>
+      </div>
+    </div>
+    <div class="nav-item cursor-pointer" onclick="window.location.href='academy.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">school</span>
+    </div>
+    <div class="nav-item cursor-pointer" onclick="window.location.href='settings.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">settings</span>
+    </div>
+  </div>
+
+  <!-- Firebase + Scripts -->
+  <script type="module">
+    // Import Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js";
+    import { getDatabase, ref, push, set, onValue, remove, update } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-database.js";
+    import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-storage.js";
+
+    // Your existing Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtNedkJo6ikNneZZdrheiWbE3Dn2B8kwQ",
+      authDomain: "ces-project-f8b4e.firebaseapp.com",
+      databaseURL: "https://ces-project-f8b4e-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "ces-project-f8b4e",
+      storageBucket: "ces-project-f8b4e.firebasestorage.app",
+      messagingSenderId: "580767851656",
+      appId: "1:580767851656:web:2c852e7edb81a6decdeb3d",
+      measurementId: "G-K73DSMWBTP"
+    };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+    const storage = getStorage(app);
+
+    // Check authentication state
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        // User is signed out, redirect to login
+        window.location.href = 'email-login.html';
+      }
+    });
+
+    // Show/hide sections
+    window.showApp = function(appId) {
+      document.querySelectorAll('section[id^="app"]').forEach(sec => {
+        sec.classList.add('hidden-section');
+        sec.classList.remove('active-section');
+      });
+      const active = document.getElementById(appId);
+      if (active) {
+        active.classList.remove('hidden-section');
+        active.classList.add('active-section');
+      }
+    }
+
+    // Toggle the loading overlay
+    window.setLoading = function(flag) {
+      const overlay = document.getElementById('loading-overlay');
+      if (flag) {
+        overlay.classList.add('active');
+      } else {
+        overlay.classList.remove('active');
+      }
+    }
+
+    // Function implementations for all 20 apps
+
+    /* ============= 1) QR Code Generator ============= */
+    window.generateQRCode = async function() {
+      const input = document.getElementById('qrInput').value.trim();
+      if (!input) return;
+      setLoading(true);
+      try {
+        // Save usage in DB
+        const usageRef = ref(db, 'qrGeneratorLogs');
+        await push(usageRef, { text: input, timestamp: Date.now() });
+
+        // Quick placeholder QR generation using Google chart API
+        const qrUrl = `https://chart.googleapis.com/chart?cht=qr&chs=200x200&chl=${encodeURIComponent(input)}`;
+        document.getElementById('qrResult').innerHTML = `<img src="${qrUrl}" alt="QR Code" class="mx-auto" />`;
+      } catch (err) {
+        console.log(err);
+      }
+      setLoading(false);
+    }
+
+    /* ============= 2) QR Code Scanner (placeholder) ============= */
+    let scanningStream = null;
+    window.startQRScanner = async function() {
+      const video = document.getElementById('qrVideo');
+      const output = document.getElementById('qrScanOutput');
+      video.style.display = 'block';
+
+      try {
+        scanningStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        video.srcObject = scanningStream;
+        video.play();
+        // Real scanning requires a library that processes frames. We'll skip that in this placeholder.
+        output.textContent = "Scanning for QR codes... (Placeholder)";
+      } catch (err) {
+        output.textContent = "Failed to access camera.";
+      }
+    }
+
+    /* ============= 3) PDF to Word (placeholder) ============= */
+    window.convertPDFtoWord = async function() {
+      const fileInput = document.getElementById('pdfToWordFile');
+      const status = document.getElementById('pdfToWordStatus');
+      if (!fileInput.files[0]) return;
+      setLoading(true);
+      try {
+        // Upload file to firebase storage
+        const file = fileInput.files[0];
+        const fileRef = sRef(storage, `pdfConversions/${Date.now()}_${file.name}`);
+        await uploadBytes(fileRef, file);
+        // In reality, you'd call a PDF->Word conversion API on your server, store results, etc.
+        status.textContent = "Conversion started (placeholder). Check server for final file.";
+      } catch (err) {
+        status.textContent = "Error uploading or converting PDF: " + err;
+      }
+      setLoading(false);
+    }
+
+    /* ============= 4) PDF to Excel (placeholder) ============= */
+    window.convertPDFtoExcel = async function() {
+      const fileInput = document.getElementById('pdfToExcelFile');
+      const status = document.getElementById('pdfToExcelStatus');
+      if (!fileInput.files[0]) return;
+      setLoading(true);
+      try {
+        // Upload file
+        const file = fileInput.files[0];
+        const fileRef = sRef(storage, `pdfConversions/${Date.now()}_${file.name}`);
+        await uploadBytes(fileRef, file);
+        status.textContent = "Conversion started (placeholder). Check server for final XLSX file.";
+      } catch (err) {
+        status.textContent = "Error uploading or converting PDF: " + err;
+      }
+      setLoading(false);
+    }
+
+    /* ============= 5) PDF to CSV (placeholder) ============= */
+    window.convertPDFtoCSV = async function() {
+      const fileInput = document.getElementById('pdfToCsvFile');
+      const status = document.getElementById('pdfToCsvStatus');
+      if (!fileInput.files[0]) return;
+      setLoading(true);
+      try {
+        const file = fileInput.files[0];
+        const fileRef = sRef(storage, `pdfConversions/${Date.now()}_${file.name}`);
+        await uploadBytes(fileRef, file);
+        status.textContent = "Conversion started (placeholder). Check server for final CSV file.";
+      } catch (err) {
+        status.textContent = "Error uploading or converting PDF: " + err;
+      }
+      setLoading(false);
+    }
+
+    /* ============= 6) YouTube Downloader (placeholder) ============= */
+    window.downloadYoutubeVideo = async function() {
+      const url = document.getElementById('ytDownloadUrl').value.trim();
+      const status = document.getElementById('ytDownloadStatus');
+      if (!url) return;
+      setLoading(true);
+      try {
+        // You'd typically pass this URL to a server endpoint that handles YT downloading
+        status.textContent = "Started downloading... (placeholder).";
+        // Log usage
+        const dlRef = ref(db, 'ytDownloads');
+        await push(dlRef, { url, timestamp: Date.now() });
+      } catch (err) {
+        status.textContent = "Error: " + err;
+      }
+      setLoading(false);
+    }
+
+    /* ============= 7) YouTube to MP3 (placeholder) ============= */
+    window.convertYoutubeToMP3 = async function() {
+      const url = document.getElementById('ytMp3Url').value.trim();
+      const status = document.getElementById('ytMp3Status');
+      if (!url) return;
+      setLoading(true);
+      try {
+        status.textContent = "Started converting to MP3... (placeholder).";
+        // Log usage in DB
+        const mp3Ref = ref(db, 'ytToMp3');
+        await push(mp3Ref, { url, timestamp: Date.now() });
+      } catch (err) {
+        status.textContent = "Error: " + err;
+      }
+      setLoading(false);
+    }
+
+    /* ============= 8) Image Compressor (placeholder) ============= */
+    window.compressImage = async function() {
+      const file = document.getElementById('imageCompressorFile').files[0];
+      const result = document.getElementById('compressResult');
+      if (!file) return;
+      setLoading(true);
+      try {
+        // Real compression requires a client library or server approach
+        const fileRef = sRef(storage, `imageCompressor/${Date.now()}_${file.name}`);
+        await uploadBytes(fileRef, file);
+        result.textContent = "Uploaded for compression (placeholder).";
+      } catch (err) {
+        result.textContent = "Error: " + err;
+      }
+      setLoading(false);
+    }
+
+    /* ============= 9) File Share ============= */
+    window.shareFile = async function() {
+      const file = document.getElementById('fileShareInput').files[0];
+      const linkOutput = document.getElementById('fileShareLink');
+      if (!file) return;
+      setLoading(true);
+      try {
+        const fileRef = sRef(storage, `sharedFiles/${Date.now()}_${file.name}`);
+        await uploadBytes(fileRef, file);
+        const downloadURL = await getDownloadURL(fileRef);
+        linkOutput.textContent = downloadURL;
+      } catch (err) {
+        linkOutput.textContent = "Error sharing file: " + err;
+      }
+      setLoading(false);
+    }
+
+    /* ============= 10) Text Translator (placeholder) ============= */
+    window.translateText = async function() {
+      const input = document.getElementById('translatorInput').value.trim();
+      const output = document.getElementById('translatorOutput');
+      if (!input) return;
+      setLoading(true);
+      try {
+        // Typically you'd call a translation API. We'll do a placeholder.
+        output.textContent = "Translated text (placeholder). Original: " + input;
+        // Log usage
+        const translRef = ref(db, 'translatorLogs');
+        await push(translRef, { input, timestamp: Date.now() });
+      } catch (err) {
+        output.textContent = "Error: " + err;
+      }
+      setLoading(false);
+    }
+
+    /* ============= 11) Text to Speech ============= */
+    window.textToSpeech = function() {
+      const text = document.getElementById('ttsInput').value;
+      if (!text) return;
+      // Basic browser TTS
+      const utterance = new SpeechSynthesisUtterance(text);
+      speechSynthesis.speak(utterance);
+    }
+
+    /* ============= 12) Speech to Text ============= */
+    window.speechToText = function() {
+      const output = document.getElementById('sttOutput');
+      if (!('webkitSpeechRecognition' in window)) {
+        output.textContent = "SpeechRecognition not supported here. (Placeholder)";
+        return;
+      }
+      const recognition = new window.webkitSpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        output.textContent = transcript;
+      };
+      recognition.start();
+    }
+
+    /* ============= 13) Currency Converter (placeholder) ============= */
+    window.convertCurrency = async function() {
+      const amount = document.getElementById('currencyAmount').value;
+      const from = document.getElementById('currencyFrom').value.trim();
+      const to = document.getElementById('currencyTo').value.trim();
+      const result = document.getElementById('currencyResult');
+      if (!amount || !from || !to) return;
+      setLoading(true);
+      try {
+        // Normally you'd call an exchange rate API
+        result.textContent = `Converted ${amount} ${from} to ??? ${to} (placeholder)`;
+        // Log usage
+        const cRef = ref(db, 'currencyLogs');
+        await push(cRef, { amount, from, to, timestamp: Date.now() });
+      } catch (err) {
+        result.textContent = err;
+      }
+      setLoading(false);
+    }
+
+    /* ============= 14) Weather Checker (placeholder) ============= */
+    window.checkWeather = async function() {
+      const city = document.getElementById('weatherCity').value.trim();
+      const result = document.getElementById('weatherResult');
+      if (!city) return;
+      setLoading(true);
+      try {
+        // Typically you'd call a weather API
+        result.textContent = `Weather in ${city} is partly sunny (placeholder).`;
+        // Log usage
+        const wRef = ref(db, 'weatherLogs');
+        await push(wRef, { city, timestamp: Date.now() });
+      } catch (err) {
+        result.textContent = err;
+      }
+      setLoading(false);
+    }
+
+    /* ============= 15) Notes App ============= */
+    const notesList = document.getElementById('notesList');
+    const noteInput = document.getElementById('noteInput');
+    const notesRef = ref(db, 'notes');
+
+    // Realtime listener to populate notes
+    onValue(notesRef, (snapshot) => {
+      notesList.innerHTML = "";
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        Object.entries(data).forEach(([id, note]) => {
+          const div = document.createElement('div');
+          div.className = "border p-2 rounded flex justify-between items-center";
+          div.innerHTML = `
+            <span>${note.text}</span>
+            <button class="ml-2 text-sm text-red-600" onclick="deleteNote('${id}')">Delete</button>
+          `;
+          notesList.appendChild(div);
+        });
+      }
+    });
+
+    window.saveNote = async function() {
+      const text = noteInput.value.trim();
+      if (!text) return;
+      setLoading(true);
+      try {
+        await push(notesRef, { text, timestamp: Date.now() });
+        noteInput.value = "";
+      } catch (err) {
+        console.log(err);
+      }
+      setLoading(false);
+    }
+
+    window.deleteNote = async function(id) {
+      setLoading(true);
+      try {
+        await remove(ref(db, 'notes/' + id));
+      } catch (err) {
+        console.log(err);
+      }
+      setLoading(false);
+    }
+
+    /* ============= 16) To-Do List ============= */
+    const todoInput = document.getElementById('todoInput');
+    const todoList = document.getElementById('todoList');
+    const todosRef = ref(db, 'todos');
+
+    // Listen for changes
+    onValue(todosRef, (snapshot) => {
+      todoList.innerHTML = "";
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        Object.entries(data).forEach(([id, item]) => {
+          const li = document.createElement('li');
+          li.className = "flex justify-between items-center";
+          li.innerHTML = `
+            <span>${item.task}</span>
+            <button class="ml-2 text-red-600" onclick="deleteTodo('${id}')">X</button>
+          `;
+          todoList.appendChild(li);
+        });
+      }
+    });
+    
+    window.addTodo = async function() {
+      const task = todoInput.value.trim();
+      if (!task) return;
+      setLoading(true);
+      try {
+        await push(todosRef, { task, timestamp: Date.now() });
+        todoInput.value = "";
+      } catch (err) {
+        console.log(err);
+      }
+      setLoading(false);
+    }
+    
+    window.deleteTodo = async function(id) {
+      setLoading(true);
+      try {
+        await remove(ref(db, 'todos/' + id));
+      } catch (err) {
+        console.log(err);
+      }
+      setLoading(false);
+    }
+
+    /* ============= 17) Password Generator ============= */
+    window.generatePassword = function() {
+      const length = parseInt(document.getElementById('passLength').value, 10) || 8;
+      const result = document.getElementById('passResult');
+      const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
+      let pass = "";
+      for (let i=0; i<length; i++){
+        pass += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      result.textContent = pass;
+    }
+
+    /* ============= 18) Random Quote (placeholder) ============= */
+    window.getRandomQuote = async function() {
+      const quoteOutput = document.getElementById('quoteOutput');
+      setLoading(true);
+      try {
+        // Typically you'd fetch from a quotes API
+        quoteOutput.textContent = ""Life is like riding a bicycle. To keep your balance, you must keep moving." – Albert Einstein (placeholder)";
+      } catch (err) {
+        quoteOutput.textContent = err;
+      }
+      setLoading(false);
+    }
+
+    /* ============= 19) Image Resizer (placeholder) ============= */
+    window.resizeImage = async function() {
+      const file = document.getElementById('imageResizerFile').files[0];
+      const w = document.getElementById('resizeWidth').value;
+      const h = document.getElementById('resizeHeight').value;
+      const result = document.getElementById('resizeResult');
+      if (!file || !w || !h) return;
+      setLoading(true);
+      try {
+        // Real resizing requires a library or server approach
+        const fileRef = sRef(storage, `imageResizer/${Date.now()}_${file.name}`);
+        await uploadBytes(fileRef, file);
+        result.textContent = `Resizing to ${w}x${h} started (placeholder).`;
+      } catch (err) {
+        result.textContent = "Error: " + err;
+      }
+      setLoading(false);
+    }
+
+    /* ============= 20) Age Calculator ============= */
+    window.calculateAge = function() {
+      const birthDate = document.getElementById('birthDate').value;
+      const result = document.getElementById('ageResult');
+      if (!birthDate) return;
+      const bday = new Date(birthDate);
+      const diff = Date.now() - bday.getTime();
+      const ageDt = new Date(diff);
+      const year = ageDt.getUTCFullYear() - 1970;
+      result.textContent = `You are ${year} years old.`;
+    }
+
+    // Handle notification icon click
+    window.handleNotificationClick = function() {
+      window.location.href = 'notifications.html';
+    }
+  </script>
+</body>
+</html>

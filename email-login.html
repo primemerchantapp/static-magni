@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Magnetar - Email Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#C00000">
+    <meta name="description" content="Magnetar - Email Login">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Magnetar">
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root {
+        --magnetar-red: #C00000;
+        --text-dark: #1A1A1A;
+      }
+      
+      body {
+        font-family: 'Open Sans', sans-serif;
+        color: var(--text-dark);
+        background-color: white;
+        -webkit-tap-highlight-color: transparent;
+      }
+      
+      h1, h2, h3, h4, h5, h6, .heading {
+        font-family: 'Roboto', sans-serif;
+      }
+      
+      .btn-primary {
+        background-color: var(--magnetar-red);
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      }
+      
+      .btn-primary:hover, .btn-primary:active {
+        background-color: #A00000;
+        transform: translateY(-1px);
+      }
+      
+      .btn-primary:active {
+        transform: translateY(1px);
+      }
+      
+      /* Remove clipboard border */
+      input, textarea, select {
+        border: none !important;
+        background-color: #f5f5f5 !important;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      }
+      
+      input:focus, textarea:focus, select:focus {
+        outline: none !important;
+        background-color: #f0f0f0 !important;
+        box-shadow: 0 0 0 2px rgba(192, 0, 0, 0.2) !important;
+      }
+      
+      /* Loading animation */
+      .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(255, 255, 255, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+      }
+      
+      .loading-overlay.active {
+        opacity: 1;
+        visibility: visible;
+      }
+      
+      .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 3px solid rgba(192, 0, 0, 0.1);
+        border-top-color: var(--magnetar-red);
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+      
+      /* Page transition animation */
+      .page-transition {
+        animation: fadeIn 0.5s ease-out;
+      }
+      
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      
+      /* Link hover effect */
+      .link-hover {
+        position: relative;
+        color: var(--magnetar-red);
+        text-decoration: none;
+        transition: color 0.3s ease;
+      }
+      
+      .link-hover:after {
+        content: '';
+        position: absolute;
+        width: 0;
+        height: 1px;
+        bottom: -2px;
+        left: 0;
+        background-color: var(--magnetar-red);
+        transition: width 0.3s ease;
+      }
+      
+      .link-hover:hover:after {
+        width: 100%;
+      }
+      
+      /* Prevent zoom */
+      * {
+        touch-action: manipulation;
+      }
+    </style>
+    <!-- Firebase SDKs (v9 modular) -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
+      import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js";
+      
+      const firebaseConfig = {
+        apiKey: "AIzaSyDtNedkJo6ikNneZZdrheiWbE3Dn2B8kwQ",
+        authDomain: "ces-project-f8b4e.firebaseapp.com",
+        databaseURL: "https://ces-project-f8b4e-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "ces-project-f8b4e",
+        storageBucket: "ces-project-f8b4e.firebasestorage.app",
+        messagingSenderId: "580767851656",
+        appId: "1:580767851656:web:2c852e7edb81a6decdeb3d",
+        measurementId: "G-K73DSMWBTP"
+      };
+      
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      
+      window.handleLogin = async function(e) {
+        e.preventDefault();
+        const emailInput = document.getElementById('email');
+        const passInput  = document.getElementById('password');
+        
+        // Show loading
+        document.getElementById('loading-overlay').classList.add('active');
+        
+        try {
+          const userCredential = await signInWithEmailAndPassword(auth, emailInput.value, passInput.value);
+          const user = userCredential.user;
+          
+          // Simulate a slight delay for better UX
+          setTimeout(() => {
+            window.location.href = 'index.html';
+          }, 500);
+          
+        } catch (err) {
+          // Hide loading
+          document.getElementById('loading-overlay').classList.remove('active');
+          
+          // Show error with animation
+          const errorElement = document.getElementById('error-message');
+          errorElement.textContent = err.message;
+          errorElement.classList.remove('hidden');
+          errorElement.classList.add('animate-bounce');
+          
+          setTimeout(() => {
+            errorElement.classList.remove('animate-bounce');
+          }, 1000);
+        }
+      }
+    </script>
+    <script>
+      // Prevent zoom on double-tap
+      document.addEventListener('touchstart', function(event) {
+        if (event.touches.length > 1) {
+          event.preventDefault();
+        }
+      }, { passive: false });
+      
+      // Prevent zoom on pinch
+      document.addEventListener('touchmove', function(event) {
+        if (event.touches.length > 1) {
+          event.preventDefault();
+        }
+      }, { passive: false });
+      
+      // Prevent zoom on double-tap
+      let lastTouchEnd = 0;
+      document.addEventListener('touchend', function(event) {
+        const now = Date.now();
+        if (now - lastTouchEnd <= 300) {
+          event.preventDefault();
+        }
+        lastTouchEnd = now;
+      }, { passive: false });
+    </script>
+  </head>
+  
+  <body class="bg-white min-h-screen flex flex-col">
+    <!-- Loading overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+      <div class="loading-spinner"></div>
+    </div>
+    
+    <main class="flex-grow flex items-center justify-center p-6 page-transition">
+      <div class="w-full max-w-sm">
+        <div class="text-center mb-8">
+          <img 
+            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20250127_191600_0000-6AwFlDvh6mQeKcJJwH3Jlyef5Qpeic.png" 
+            alt="Magnetar Logo" 
+            class="w-20 h-20 mx-auto mb-4"
+          />
+          <h2 class="text-2xl font-bold">Welcome Back</h2>
+        </div>
+        
+        <div class="bg-white w-full">
+          <form class="space-y-4" onsubmit="handleLogin(event)">
+            <div id="error-message" class="text-red-500 text-sm text-center hidden"></div>
+            
+            <div>
+              <label class="block text-sm font-medium mb-1">Email</label>
+              <input 
+                id="email"
+                type="email"
+                class="w-full p-3 rounded-lg"
+                placeholder="Enter your email"
+                required
+              />
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium mb-1">Password</label>
+              <input 
+                id="password"
+                type="password"
+                class="w-full p-3 rounded-lg"
+                placeholder="Enter your password"
+                required
+              />
+            </div>
+            
+            <button 
+              type="submit"
+              class="w-full btn-primary text-white p-3 rounded-lg font-medium mt-2"
+            >
+              Login
+            </button>
+            
+            <div class="text-center mt-4">
+              Need an account?
+              <a href="email-signup.html" class="link-hover ml-1">Sign Up</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </main>
+    
+    <!-- Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
+            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+          }, function(err) {
+            console.log('ServiceWorker registration failed: ', err);
+          });
+        });
+      }
+      
+      // Add page transition animation
+      document.addEventListener('DOMContentLoaded', function() {
+        document.body.classList.add('page-transition');
+      });
+    </script>
+  </body>
+</html>

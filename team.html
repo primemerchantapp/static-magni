@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Magnetar - Team</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#C00000">
+  <meta name="description" content="Magnetar - Team Management">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Magnetar">
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --magnetar-red: #C00000;
+      --text-dark: #1A1A1A;
+    }
+    
+    body {
+      font-family: 'Open Sans', sans-serif;
+      color: var(--text-dark);
+      background-color: #f5f5f5;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    h1, h2, h3, h4, h5, h6, .heading {
+      font-family: 'Roboto', sans-serif;
+    }
+    
+    .btn-primary {
+      background-color: var(--magnetar-red);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    .btn-primary:hover, .btn-primary:active {
+      background-color: #A00000;
+      transform: translateY(-1px);
+    }
+    
+    .btn-primary:active {
+      transform: translateY(1px);
+    }
+    
+    /* Loading animation */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    
+    .loading-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 3px solid rgba(192, 0, 0, 0.1);
+      border-top-color: var(--magnetar-red);
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Team member card hover effect */
+    .team-card {
+      transition: all 0.3s ease;
+    }
+    
+    .team-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Bottom nav hover animation */
+    .nav-item {
+      transition: all 0.3s ease;
+    }
+    
+    .nav-item:hover {
+      transform: translateY(-5px);
+    }
+
+    /* Center button styles */
+    .center-button {
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      transform: translateY(-10px);
+      transition: all 0.3s ease;
+    }
+
+    .center-button:hover {
+      transform: translateY(-15px);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+    }
+    
+    /* Tab styles */
+    .tab-button {
+      transition: all 0.3s ease;
+    }
+    
+    .tab-button.active {
+      color: var(--magnetar-red);
+      border-color: var(--magnetar-red);
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.5s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+  <script>
+    // Prevent zoom on double-tap
+    document.addEventListener('touchstart', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Prevent zoom on pinch
+    document.addEventListener('touchmove', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Prevent zoom on double-tap
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(event) {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, { passive: false });
+  </script>
+</head>
+
+<body class="bg-gray-100 flex flex-col mx-auto min-h-screen max-w-sm w-full">
+  <!-- Loading overlay -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <!-- Header -->
+  <header class="bg-white text-gray-800 p-4 text-lg font-semibold flex items-center justify-between sticky top-0 z-50 shadow-sm">
+    <div class="flex items-center">
+      <div class="w-32 h-10 bg-no-repeat bg-center bg-contain"
+          style="background-image: url('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20250127_191600_0000-6AwFlDvh6mQeKcJJwH3Jlyef5Qpeic.png')"></div>
+    </div>
+    <div class="flex items-center space-x-6">
+      <div class="relative cursor-pointer" onclick="handleNotificationClick()">
+        <span class="material-icons text-2xl text-gray-700">notifications</span>
+        <span id="notificationBadge"
+            class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 hidden">0</span>
+      </div>
+      <span class="material-icons text-2xl cursor-pointer text-gray-700" id="logoutBtn">logout</span>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col items-center p-4 w-full overflow-y-auto pb-24 space-y-6">
+    <!-- Team Stats -->
+    <div class="bg-white rounded-lg shadow w-full p-4">
+      <h2 class="text-lg font-bold mb-3">Team Overview</h2>
+      <div class="grid grid-cols-2 gap-4">
+        <div class="bg-gray-50 p-3 rounded-lg">
+          <p class="text-sm text-gray-600">Team Members</p>
+          <p class="text-2xl font-bold">24</p>
+          <div class="flex items-center text-green-600 text-xs mt-1">
+            <span class="material-icons text-xs mr-1">arrow_upward</span>
+            <span>3 new this month</span>
+          </div>
+        </div>
+        <div class="bg-gray-50 p-3 rounded-lg">
+          <p class="text-sm text-gray-600">Active Members</p>
+          <p class="text-2xl font-bold">18</p>
+          <div class="flex items-center text-gray-600 text-xs mt-1">
+            <span class="material-icons text-xs mr-1">remove</span>
+            <span>75% active rate</span>
+          </div>
+        </div>
+        <div class="bg-gray-50 p-3 rounded-lg">
+          <p class="text-sm text-gray-600">Team Sales</p>
+          <p class="text-2xl font-bold">$4,250</p>
+          <div class="flex items-center text-green-600 text-xs mt-1">
+            <span class="material-icons text-xs mr-1">arrow_upward</span>
+            <span>12% this month</span>
+          </div>
+        </div>
+        <div class="bg-gray-50 p-3 rounded-lg">
+          <p class="text-sm text-gray-600">Team Rank</p>
+          <p class="text-2xl font-bold">Silver</p>
+          <div class="flex items-center text-blue-600 text-xs mt-1">
+            <span class="material-icons text-xs mr-1">star</span>
+            <span>75% to Gold</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Team Tabs -->
+    <div class="w-full">
+      <div class="flex border-b border-gray-200">
+        <button class="tab-button active py-3 px-4 font-medium border-b-2 border-red-600 text-red-600" data-tab="members">
+          Members
+        </button>
+        <button class="tab-button py-3 px-4 font-medium border-b-2 border-transparent" data-tab="structure">
+          Structure
+        </button>
+        <button class="tab-button py-3 px-4 font-medium border-b-2 border-transparent" data-tab="performance">
+          Performance
+        </button>
+      </div>
+      
+      <!-- Members Tab Content -->
+      <div id="members-tab" class="tab-content active py-4">
+        <!-- Search and Filter -->
+        <div class="flex mb-4">
+          <div class="relative flex-1 mr-2">
+            <input 
+              type="text" 
+              placeholder="Search members..." 
+              class="w-full p-2 pl-8 rounded-lg border border-gray-300 text-sm"
+            >
+            <span class="material-icons absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">search</span>
+          </div>
+          <button class="bg-gray-200 p-2 rounded-lg">
+            <span class="material-icons text-gray-600">filter_list</span>
+          </button>
+        </div>
+        
+        <!-- Team Members List -->
+        <div class="space-y-3">
+          <!-- Team Member 1 -->
+          <div class="bg-white rounded-lg p-3 shadow flex items-center team-card">
+            <div class="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold mr-3">
+              JS
+            </div>
+            <div class="flex-1">
+              <h3 class="font-medium">John Smith</h3>
+              <p class="text-xs text-gray-600">Gold Member • Joined Jan 2023</p>
+            </div>
+            <div class="flex items-center">
+              <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full mr-2">Active</span>
+              <button class="text-gray-400 hover:text-gray-600">
+                <span class="material-icons">more_vert</span>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Team Member 2 -->
+          <div class="bg-white rounded-lg p-3 shadow flex items-center team-card">
+            <div class="w-12 h-12 rounded-full bg-purple-500 flex items-center justify-center text-white font-bold mr-3">
+              SD
+            </div>
+            <div class="flex-1">
+              <h3 class="font-medium">Sarah Davis</h3>
+              <p class="text-xs text-gray-600">Silver Member • Joined Mar 2023</p>
+            </div>
+            <div class="flex items-center">
+              <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full mr-2">Active</span>
+              <button class="text-gray-400 hover:text-gray-600">
+                <span class="material-icons">more_vert</span>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Team Member 3 -->
+          <div class="bg-white rounded-lg p-3 shadow flex items-center team-card">
+            <div class="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center text-white font-bold mr-3">
+              RJ
+            </div>
+            <div class="flex-1">
+              <h3 class="font-medium">Robert Johnson</h3>
+              <p class="text-xs text-gray-600">Bronze Member • Joined Apr 2023</p>
+            </div>
+            <div class="flex items-center">
+              <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full mr-2">Inactive</span>
+              <button class="text-gray-400 hover:text-gray-600">
+                <span class="material-icons">more_vert</span>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Team Member 4 -->
+          <div class="bg-white rounded-lg p-3 shadow flex items-center team-card">
+            <div class="w-12 h-12 rounded-full bg-red-500 flex items-center justify-center text-white font-bold mr-3">
+              ML
+            </div>
+            <div class="flex-1">
+              <h3 class="font-medium">Maria Lopez</h3>
+              <p class="text-xs text-gray-600">Gold Member • Joined Feb 2023</p>
+            </div>
+            <div class="flex items-center">
+              <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full mr-2">Active</span>
+              <button class="text-gray-400 hover:text-gray-600">
+                <span class="material-icons">more_vert</span>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Team Member 5 -->
+          <div class="bg-white rounded-lg p-3 shadow flex items-center team-card">
+            <div class="w-12 h-12 rounded-full bg-yellow-500 flex items-center justify-center text-white font-bold mr-3">
+              DW
+            </div>
+            <div class="flex-1">
+              <h3 class="font-medium">David Wilson</h3>
+              <p class="text-xs text-gray-600">Silver Member • Joined May 2023</p>
+            </div>
+            <div class="flex items-center">
+              <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full mr-2">Active</span>
+              <button class="text-gray-400 hover:text-gray-600">
+                <span class="material-icons">more_vert</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Add Member Button -->
+        <button class="w-full mt-4 flex items-center justify-center bg-gray-100 p-3 rounded-lg text-gray-700 font-medium">
+          <span class="material-icons mr-2">person_add</span>
+          Add New Member
+        </button>
+      </div>
+      
+      <!-- Structure Tab Content -->
+      <div id="structure-tab" class="tab-content py-4">
+        <div class="bg-white rounded-lg shadow p-4 mb-4">
+          <h3 class="font-medium mb-3">Team Hierarchy</h3>
+          <div class="text-center">
+            <p class="text-sm text-gray-600 mb-4">Interactive team structure visualization will be available in the next update.</p>
+            <img 
+              src="https://images.unsplash.com/photo-1542626991-cbc4e32524cc?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" 
+              alt="Team Structure Placeholder" 
+              class="w-full h-48 object-cover rounded-lg"
+            >
+          </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-4">
+          <h3 class="font-medium mb-3">Team Levels</h3>
+          <div class="space-y-3">
+            <div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+              <div class="flex items-center">
+                <div class="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center mr-2">
+                  <span class="material-icons text-yellow-600 text-sm">workspace_premium</span>
+                </div>
+                <span>Gold Level</span>
+              </div>
+              <span class="text-sm font-medium">3 members</span>
+            </div>
+            
+            <div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+              <div class="flex items-center">
+                <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center mr-2">
+                  <span class="material-icons text-gray-600 text-sm">workspace_premium</span>
+                </div>
+                <span>Silver Level</span>
+              </div>
+              <span class="text-sm font-medium">8 members</span>
+            </div>
+            
+            <div class="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+              <div class="flex items-center">
+                <div class="w-8 h-8 rounded-full bg-amber-700 flex items-center justify-center mr-2">
+                  <span class="material-icons text-amber-200 text-sm">workspace_premium</span>
+                </div>
+                <span>Bronze Level</span>
+              </div>
+              <span class="text-sm font-medium">13 members</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Performance Tab Content -->
+      <div id="performance-tab" class="tab-content py-4">
+        <div class="bg-white rounded-lg shadow p-4 mb-4">
+          <h3 class="font-medium mb-3">Team Performance</h3>
+          <div class="text-center">
+            <p class="text-sm text-gray-600 mb-4">Interactive performance charts will be available in the next update.</p>
+            <img 
+              src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" 
+              alt="Performance Chart Placeholder" 
+              class="w-full h-48 object-cover rounded-lg"
+            >
+          </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-4">
+          <h3 class="font-medium mb-3">Top Performers</h3>
+          <div class="space-y-3">
+            <div class="flex items-center p-2 bg-gray-50 rounded-lg">
+              <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold mr-3">
+                JS
+              </div>
+              <div class="flex-1">
+                <h4 class="font-medium">John Smith</h4>
+                <div class="flex items-center">
+                  <span class="text-yellow-500 material-icons text-xs">star</span>
+                  <span class="text-yellow-500 material-icons text-xs">star</span>
+                  <span class="text-yellow-500 material-icons text-xs">star</span>
+                  <span class="text-yellow-500 material-icons text-xs">star</span>
+                  <span class="text-yellow-500 material-icons text-xs">star</span>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="font-bold">$1,250</span>
+                <p class="text-xs text-gray-600">Sales this month</p>
+              </div>
+            </div>
+            
+            <div class="flex items-center p-2 bg-gray-50 rounded-lg">
+              <div class="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center text-white font-bold mr-3">
+                ML
+              </div>
+              <div class="flex-1">
+                <h4 class="font-medium">Maria Lopez</h4>
+                <div class="flex items-center">
+                  <span class="text-yellow-500 material-icons text-xs">star</span>
+                  <span class="text-yellow-500 material-icons text-xs">star</span>
+                  <span class="text-yellow-500 material-icons text-xs">star</span>
+                  <span class="text-yellow-500 material-icons text-xs">star</span>
+                  <span class="text-gray-300 material-icons text-xs">star</span>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="font-bold">$980</span>
+                <p class="text-xs text-gray-600">Sales this month</p>
+              </div>
+            </div>
+            
+            <div class="flex items-center p-2 bg-gray-50 rounded-lg">
+              <div class="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center text-white font-bold mr-3">
+                SD
+              </div>
+              <div class="flex-1">
+                <h4 class="font-medium">Sarah Davis</h4>
+                <div class="flex items-center">
+                  <span class="text-yellow-500 material-icons text-xs">star</span>
+                  <span class="text-yellow-500 material-icons text-xs">star</span>
+                  <span class="text-yellow-500 material-icons text-xs">star</span>
+                  <span class="text-gray-300 material-icons text-xs">star</span>
+                  <span class="text-gray-300 material-icons text-xs">star</span>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="font-bold">$750</span>
+                <p class="text-xs text-gray-600">Sales this month</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Bottom Nav -->
+  <div class="bg-white border-t border-gray-300 w-full max-w-sm flex justify-around items-center py-2 fixed bottom-0 left-1/2 transform -translate-x-1/2">
+    <div class="nav-item cursor-pointer" onclick="window.location.href='social.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">people</span>
+    </div>
+    <div class="nav-item cursor-pointer" onclick="window.location.href='wallet.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">account_balance_wallet</span>
+    </div>
+    <div class="center-button cursor-pointer" onclick="window.location.href='index.html'">
+      <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center shadow-md">
+        <div class="w-8 h-8 bg-contain bg-center bg-no-repeat"
+            style="background-image: url('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20250127_191600_0000-6AwFlDvh6mQeKcJJwH3Jlyef5Qpeic.png')"></div>
+      </div>
+    </div>
+    <div class="nav-item cursor-pointer" onclick="window.location.href='academy.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">school</span>
+    </div>
+    <div class="nav-item cursor-pointer" onclick="window.location.href='settings.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">settings</span>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js";
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtNedkJo6ikNneZZdrheiWbE3Dn2B8kwQ",
+      authDomain: "ces-project-f8b4e.firebaseapp.com",
+      databaseURL: "https://ces-project-f8b4e-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "ces-project-f8b4e",
+      storageBucket: "ces-project-f8b4e.firebasestorage.app",
+      messagingSenderId: "580767851656",
+      appId: "1:580767851656:web:2c852e7edb81a6decdeb3d",
+      measurementId: "G-K73DSMWBTP"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    
+    // DOM elements
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const notificationBadge = document.getElementById('notificationBadge');
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    // Show loading initially
+    loadingOverlay.classList.add('active');
+    
+    // Check authentication state
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is signed in
+        console.log("User is signed in:", user.uid);
+        // Hide loading
+        loadingOverlay.classList.remove('active');
+      } else {
+        // User is signed out, redirect to login
+        window.location.href = 'email-login.html';
+      }
+    });
+    
+    // Handle logout
+    logoutBtn.addEventListener('click', () => {
+      auth.signOut()
+        .then(() => {
+          window.location.href = 'email-login.html';
+        })
+        .catch(err => console.error('Logout error:', err));
+    });
+    
+    // Function to update notification badge count
+    function updateNotificationBadge(count) {
+      if (count > 0) {
+        notificationBadge.textContent = count;
+        notificationBadge.classList.remove('hidden');
+      } else {
+        notificationBadge.classList.add('hidden');
+      }
+    }
+    
+    // Handle notification icon click
+    function handleNotificationClick() {
+      window.location.href = 'notifications.html';
+    }
+    
+    // Tab functionality
+    tabButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        // Remove active class from all buttons and contents
+        tabButtons.forEach(btn => {
+          btn.classList.remove('active');
+          btn.classList.remove('text-red-600', 'border-red-600');
+        });
+        tabContents.forEach(content => content.classList.remove('active'));
+        
+        // Add active class to clicked button
+        button.classList.add('active');
+        button.classList.add('text-red-600', 'border-red-600');
+        
+        // Show corresponding content
+        const tabId = button.getAttribute('data-tab');
+        document.getElementById(`${tabId}-tab`).classList.add('active');
+      });
+    });
+    
+    // Add click event listeners to team cards
+    document.querySelectorAll('.team-card').forEach(card => {
+      card.addEventListener('click', function(e) {
+        // Don't trigger if the button was clicked
+        if (e.target.tagName === 'BUTTON' || e.target.tagName === 'SPAN' && e.target.parentElement.tagName === 'BUTTON') return;
+        
+        // Show loading animation
+        loadingOverlay.classList.add('active');
+        
+        // Get member name
+        const memberName = this.querySelector('h3').textContent;
+        
+        // Simulate loading delay
+        setTimeout(() => {
+          loadingOverlay.classList.remove('active');
+          
+          // For demo purposes, show an alert with the member name
+          alert(`${memberName}'s profile will be available in the next update!`);
+        }, 800);
+      });
+    });
+  </script>
+</body>
+</html>

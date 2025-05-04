@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Magnetar - Add Money</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#C00000">
+  <meta name="description" content="Magnetar - Add Money">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Magnetar">
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --magnetar-red: #C00000;
+      --text-dark: #1A1A1A;
+      --maya-blue: #00A1DF;
+    }
+    
+    body {
+      font-family: 'Open Sans', sans-serif;
+      color: var(--text-dark);
+      background-color: #f7f7f7;
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior: none;
+    }
+    
+    h1, h2, h3, h4, h5, h6, .heading {
+      font-family: 'Roboto', sans-serif;
+    }
+    
+    .btn-primary {
+      background-color: var(--magnetar-red);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    .btn-primary:hover, .btn-primary:active {
+      background-color: #A00000;
+      transform: translateY(-1px);
+    }
+    
+    .btn-primary:active {
+      transform: translateY(1px);
+    }
+    
+    /* Custom input styles */
+    input, textarea, select {
+      background-color: #f5f5f5 !important;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    input:focus, textarea:focus, select:focus {
+      outline: none !important;
+      background-color: #f0f0f0 !important;
+      box-shadow: 0 0 0 2px rgba(192, 0, 0, 0.2) !important;
+    }
+    
+    .card {
+      background-color: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    .card:hover {
+      box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+      transform: translateY(-3px);
+    }
+    
+    /* Page transition animation */
+    .page-transition {
+      animation: fadeIn 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Loading animation */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    
+    .loading-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 3px solid rgba(192, 0, 0, 0.1);
+      border-top-color: var(--magnetar-red);
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Payment method selection */
+    .payment-method {
+      border: 2px solid transparent;
+      transition: all 0.2s ease;
+    }
+    
+    .payment-method:hover {
+      border-color: #e0e0e0;
+    }
+    
+    .payment-method.selected {
+      border-color: var(--magnetar-red);
+      background-color: rgba(192, 0, 0, 0.05);
+    }
+    
+    /* Amount buttons */
+    .amount-btn {
+      transition: all 0.2s ease;
+      border: 2px solid #e0e0e0;
+    }
+    
+    .amount-btn:hover {
+      border-color: #d0d0d0;
+    }
+    
+    .amount-btn.selected {
+      border-color: var(--magnetar-red);
+      background-color: rgba(192, 0, 0, 0.05);
+    }
+    
+    /* Maya specific styles */
+    .maya-button {
+      background-color: var(--maya-blue);
+      color: white;
+      transition: all 0.3s ease;
+    }
+    
+    .maya-button:hover {
+      background-color: #0090c8;
+    }
+    
+    .maya-logo {
+      max-height: 24px;
+      margin-right: 8px;
+    }
+    
+    /* Prevent zoom */
+    * {
+      touch-action: manipulation;
+    }
+    
+    html, body {
+      overflow-x: hidden;
+      max-width: 100%;
+      touch-action: pan-y;
+    }
+  </style>
+  <!-- Firebase SDKs (v9 modular) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, updateDoc, addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js";
+    
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtNedkJo6ikNneZZdrheiWbE3Dn2B8kwQ",
+      authDomain: "ces-project-f8b4e.firebaseapp.com",
+      databaseURL: "https://ces-project-f8b4e-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "ces-project-f8b4e",
+      storageBucket: "ces-project-f8b4e.firebasestorage.app",
+      messagingSenderId: "580767851656",
+      appId: "1:580767851656:web:2c852e7edb81a6decdeb3d",
+      measurementId: "G-K73DSMWBTP"
+    };
+    
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    
+    // Maya Sandbox API configuration
+    const MAYA_SANDBOX_API = {
+      baseUrl: "https://pg-sandbox.paymaya.com/checkout/v1",
+      publicKey: "pk-Z0OSzLvIcOI2UIvDhdTGVVfRSSeiGStnceqwUE7n0Ah", // Sandbox public key
+      checkoutEndpoint: "/checkouts",
+      webhookSuccessUrl: window.location.origin + "/maya-success.html",
+      webhookFailureUrl: window.location.origin + "/maya-failure.html",
+      webhookCancelUrl: window.location.origin + "/maya-cancel.html"
+    };
+    
+    // Function to load user wallet data
+    async function loadWalletData() {
+      try {
+        const user = auth.currentUser;
+        if (!user) {
+          window.location.href = 'email-login.html';
+          return;
+        }
+        
+        // Get user data
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        const userData = userDoc.data();
+        
+        if (!userData) {
+          console.error("User data not found");
+          return;
+        }
+        
+        // Update UI with wallet data
+        const walletBalance = userData.walletBalance || 0;
+        document.getElementById('wallet-balance').textContent = `₱${walletBalance.toFixed(2)}`;
+        
+      } catch (error) {
+        console.error("Error loading wallet data:", error);
+        document.getElementById('error-message').textContent = error.message;
+        document.getElementById('error-message').classList.remove('hidden');
+      }
+    }
+    
+    // Function to create Maya checkout session
+    window.createMayaCheckout = async function(amount) {
+      const loadingOverlay = document.getElementById('loading-overlay');
+      
+      try {
+        loadingOverlay.classList.add('active');
+        
+        const user = auth.currentUser;
+        if (!user) {
+          window.location.href = 'email-login.html';
+          return;
+        }
+        
+        // Get user data for checkout details
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        const userData = userDoc.data();
+        
+        if (!userData) {
+          throw new Error("User data not found");
+        }
+        
+        // Create checkout request payload
+        const checkoutPayload = {
+          totalAmount: {
+            value: amount,
+            currency: "PHP"
+          },
+          requestReferenceNumber: "MAG-" + Date.now(),
+          redirectUrl: {
+            success: MAYA_SANDBOX_API.webhookSuccessUrl,
+            failure: MAYA_SANDBOX_API.webhookFailureUrl,
+            cancel: MAYA_SANDBOX_API.webhookCancelUrl
+          },
+          metadata: {
+            userId: user.uid,
+            email: user.email
+          }
+        };
+        
+        // Call Maya Sandbox API to create checkout
+        const response = await fetch(MAYA_SANDBOX_API.baseUrl + MAYA_SANDBOX_API.checkoutEndpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Basic ${btoa(MAYA_SANDBOX_API.publicKey + ':')}`
+          },
+          body: JSON.stringify(checkoutPayload)
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(`Maya API error: ${errorData.message || 'Unknown error'}`);
+        }
+        
+        const checkoutData = await response.json();
+        
+        // Save checkout reference to Firestore
+        await addDoc(collection(db, "maya_checkouts"), {
+          userId: user.uid,
+          checkoutId: checkoutData.checkoutId,
+          amount: amount,
+          status: "pending",
+          requestReferenceNumber: checkoutPayload.requestReferenceNumber,
+          timestamp: serverTimestamp()
+        });
+        
+        // Redirect to Maya checkout URL
+        window.location.href = checkoutData.redirectUrl;
+        
+      } catch (error) {
+        console.error("Error creating Maya checkout:", error);
+        document.getElementById('error-message').textContent = error.message;
+        document.getElementById('error-message').classList.remove('hidden');
+      } finally {
+        loadingOverlay.classList.remove('active');
+      }
+    };
+    
+    // Function to process payment
+    window.processPayment = async function() {
+      const loadingOverlay = document.getElementById('loading-overlay');
+      
+      try {
+        loadingOverlay.classList.add('active');
+        
+        const user = auth.currentUser;
+        if (!user) {
+          window.location.href = 'email-login.html';
+          return;
+        }
+        
+        // Get selected payment method
+        const selectedMethod = document.querySelector('.payment-method.selected');
+        if (!selectedMethod) {
+          throw new Error("Please select a payment method");
+        }
+        
+        // Get amount
+        let amount = 0;
+        const selectedAmount = document.querySelector('.amount-btn.selected');
+        if (selectedAmount) {
+          amount = parseFloat(selectedAmount.dataset.amount);
+        } else {
+          const customAmount = document.getElementById('custom-amount').value;
+          if (!customAmount || isNaN(parseFloat(customAmount))) {
+            throw new Error("Please enter a valid amount");
+          }
+          amount = parseFloat(customAmount);
+        }
+        
+        if (amount <= 0) {
+          throw new Error("Amount must be greater than 0");
+        }
+        
+        // Handle Maya payment method
+        if (selectedMethod.dataset.method === 'maya') {
+          await createMayaCheckout(amount);
+          return;
+        }
+        
+        // For other payment methods, continue with the existing flow
+        // In a real app, you would process the payment with a payment gateway here
+        // For this demo, we'll simulate a successful payment
+        
+        // Get user data
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        const userData = userDoc.data();
+        
+        if (!userData) {
+          throw new Error("User data not found");
+        }
+        
+        // Update wallet balance
+        const currentBalance = userData.walletBalance || 0;
+        const newBalance = currentBalance + amount;
+        
+        await updateDoc(doc(db, "users", user.uid), {
+          walletBalance: newBalance
+        });
+        
+        // Add transaction record
+        await addDoc(collection(db, "transactions"), {
+          userId: user.uid,
+          type: "deposit",
+          amount: amount,
+          method: selectedMethod.dataset.method,
+          status: "completed",
+          timestamp: serverTimestamp()
+        });
+        
+        // Show success message
+        document.getElementById('success-message').textContent = `Successfully added ₱${amount.toFixed(2)} to your wallet`;
+        document.getElementById('success-message').classList.remove('hidden');
+        
+        // Update wallet balance display
+        document.getElementById('wallet-balance').textContent = `₱${newBalance.toFixed(2)}`;
+        
+        // Reset form
+        document.querySelectorAll('.payment-method').forEach(method => {
+          method.classList.remove('selected');
+        });
+        
+        document.querySelectorAll('.amount-btn').forEach(btn => {
+          btn.classList.remove('selected');
+        });
+        
+        document.getElementById('custom-amount').value = '';
+        
+        // Hide error message if visible
+        document.getElementById('error-message').classList.add('hidden');
+        
+      } catch (error) {
+        console.error("Error processing payment:", error);
+        document.getElementById('error-message').textContent = error.message;
+        document.getElementById('error-message').classList.remove('hidden');
+        document.getElementById('success-message').classList.add('hidden');
+      } finally {
+        loadingOverlay.classList.remove('active');
+      }
+    }
+    
+    // Function to select payment method
+    window.selectPaymentMethod = function(element) {
+      document.querySelectorAll('.payment-method').forEach(method => {
+        method.classList.remove('selected');
+      });
+      
+      element.classList.add('selected');
+    }
+    
+    // Function to select amount
+    window.selectAmount = function(element) {
+      document.querySelectorAll('.amount-btn').forEach(btn => {
+        btn.classList.remove('selected');
+      });
+      
+      element.classList.add('selected');
+      document.getElementById('custom-amount').value = '';
+    }
+    
+    // Function to handle custom amount input
+    window.handleCustomAmount = function() {
+      document.querySelectorAll('.amount-btn').forEach(btn => {
+        btn.classList.remove('selected');
+      });
+    }
+    
+    // Check authentication state
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        loadWalletData();
+      } else {
+        window.location.href = 'email-login.html';
+      }
+    });
+  </script>
+  <script>
+    // Add page transition animation
+    document.addEventListener('DOMContentLoaded', function() {
+      document.body.classList.add('page-transition');
+    });
+    
+    // Prevent zoom on double-tap
+    document.addEventListener('touchstart', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Prevent zoom on pinch
+    document.addEventListener('touchmove', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Prevent zoom on double-tap
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(event) {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, { passive: false });
+  </script>
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+  <!-- Loading overlay -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="loading-spinner"></div>
+  </div>
+  
+  <!-- Header -->
+  <header class="bg-white shadow-sm p-4 flex items-center justify-between sticky top-0 z-10">
+    <a href="wallet.html" class="flex items-center">
+      <span class="material-icons text-gray-600 mr-2">arrow_back</span>
+      <h1 class="text-xl font-bold">Add Money</h1>
+    </a>
+  </header>
+  
+  <main class="container mx-auto px-4 py-6 pb-20 max-w-lg">
+    <!-- Error message -->
+    <div id="error-message" class="bg-red-100 text-red-700 p-4 rounded-lg mb-6 hidden"></div>
+    
+    <!-- Success message -->
+    <div id="success-message" class="bg-green-100 text-green-700 p-4 rounded-lg mb-6 hidden"></div>
+    
+    <!-- Wallet Balance Card -->
+    <div class="card p-6 mb-6">
+      <h2 class="text-lg font-medium mb-2">Current Balance</h2>
+      <p id="wallet-balance" class="text-3xl font-bold">₱0.00</p>
+    </div>
+    
+    <!-- Add Money Form -->
+    <div class="card p-6 mb-6">
+      <h2 class="text-xl font-bold mb-4">Add Money</h2>
+      
+      <!-- Amount Selection -->
+      <div class="mb-6">
+        <h3 class="font-medium mb-3">Select Amount</h3>
+        <div class="grid grid-cols-3 gap-3 mb-4">
+          <button class="amount-btn p-3 rounded-lg text-center" data-amount="500" onclick="selectAmount(this)">
+            <span class="block font-bold">₱500</span>
+          </button>
+          <button class="amount-btn p-3 rounded-lg text-center" data-amount="1000" onclick="selectAmount(this)">
+            <span class="block font-bold">₱1,000</span>
+          </button>
+          <button class="amount-btn p-3 rounded-lg text-center" data-amount="2000" onclick="selectAmount(this)">
+            <span class="block font-bold">₱2,000</span>
+          </button>
+          <button class="amount-btn p-3 rounded-lg text-center" data-amount="5000" onclick="selectAmount(this)">
+            <span class="block font-bold">₱5,000</span>
+          </button>
+          <button class="amount-btn p-3 rounded-lg text-center" data-amount="10000" onclick="selectAmount(this)">
+            <span class="block font-bold">₱10,000</span>
+          </button>
+          <button class="amount-btn p-3 rounded-lg text-center" data-amount="20000" onclick="selectAmount(this)">
+            <span class="block font-bold">₱20,000</span>
+          </button>
+        </div>
+        
+        <div class="mb-4">
+          <label for="custom-amount" class="block text-sm font-medium text-gray-700 mb-1">Or enter custom amount</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <span class="text-gray-500">₱</span>
+            </div>
+            <input type="number" id="custom-amount" class="pl-7 block w-full p-2 border border-gray-300 rounded-lg" placeholder="Enter amount" oninput="handleCustomAmount()">
+          </div>
+        </div>
+      </div>
+      
+      <!-- Payment Method Selection -->
+      <div class="mb-6">
+        <h3 class="font-medium mb-3">Select Payment Method</h3>
+        <div class="space-y-3">
+          <!-- Maya Payment Method -->
+          <div class="payment-method p-4 rounded-lg flex items-center cursor-pointer" data-method="maya" onclick="selectPaymentMethod(this)">
+            <div class="bg-blue-500 text-white rounded-full p-2 mr-3 flex items-center justify-center">
+              <span class="material-icons">account_balance_wallet</span>
+            </div>
+            <div>
+              <h4 class="font-medium">Maya</h4>
+              <p class="text-sm text-gray-500">Pay with Maya e-wallet</p>
+            </div>
+          </div>
+          
+          <div class="payment-method p-4 rounded-lg flex items-center cursor-pointer" data-method="credit_card" onclick="selectPaymentMethod(this)">
+            <span class="material-icons text-blue-500 mr-3">credit_card</span>
+            <div>
+              <h4 class="font-medium">Credit / Debit Card</h4>
+              <p class="text-sm text-gray-500">Visa, Mastercard, JCB</p>
+            </div>
+          </div>
+          
+          <div class="payment-method p-4 rounded-lg flex items-center cursor-pointer" data-method="gcash" onclick="selectPaymentMethod(this)">
+            <div class="bg-blue-600 text-white rounded-full p-2 mr-3 flex items-center justify-center">
+              <span class="material-icons">smartphone</span>
+            </div>
+            <div>
+              <h4 class="font-medium">GCash</h4>
+              <p class="text-sm text-gray-500">Pay with GCash e-wallet</p>
+            </div>
+          </div>
+          
+          <div class="payment-method p-4 rounded-lg flex items-center cursor-pointer" data-method="bank_transfer" onclick="selectPaymentMethod(this)">
+            <span class="material-icons text-green-600 mr-3">account_balance</span>
+            <div>
+              <h4 class="font-medium">Bank Transfer</h4>
+              <p class="text-sm text-gray-500">Direct bank transfer</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Submit Button -->
+      <button class="w-full py-3 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors" onclick="processPayment()">
+        Add Money
+      </button>
+    </div>
+    
+    <!-- Info Card -->
+    <div class="card p-6">
+      <h3 class="font-medium mb-3">Important Information</h3>
+      <ul class="space-y-2 text-sm text-gray-600">
+        <li class="flex items-start">
+          <span class="material-icons text-gray-500 mr-2 text-sm">info</span>
+          <span>Funds will be available in your wallet immediately after successful payment.</span>
+        </li>
+        <li class="flex items-start">
+          <span class="material-icons text-gray-500 mr-2 text-sm">info</span>
+          <span>All transactions are secure and encrypted.</span>
+        </li>
+        <li class="flex items-start">
+          <span class="material-icons text-gray-500 mr-2 text-sm">info</span>
+          <span>Maya payments are processed instantly.</span>
+        </li>
+        <li class="flex items-start">
+          <span class="material-icons text-gray-500 mr-2 text-sm">info</span>
+          <span>For any issues with payments, please contact our support team.</span>
+        </li>
+      </ul>
+    </div>
+  </main>
+  
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
+          console.log('ServiceWorker registration successful with scope: ', registration.scope);
+        }, function(err) {
+          console.log('ServiceWorker registration failed: ', err);
+        });
+      });
+    }
+  </script>
+</body>
+</html>

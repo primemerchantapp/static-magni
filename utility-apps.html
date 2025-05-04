@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Magnetar - Utility Apps</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#C00000">
+  <meta name="description" content="Magnetar - Utility Apps">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Magnetar">
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --magnetar-red: #C00000;
+      --text-dark: #1A1A1A;
+    }
+    
+    body {
+      font-family: 'Open Sans', sans-serif;
+      color: var(--text-dark);
+      background-color: #f5f5f5;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    h1, h2, h3, h4, h5, h6, .heading {
+      font-family: 'Roboto', sans-serif;
+    }
+    
+    .btn-primary {
+      background-color: var(--magnetar-red);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    .btn-primary:hover, .btn-primary:active {
+      background-color: #A00000;
+      transform: translateY(-1px);
+    }
+    
+    .btn-primary:active {
+      transform: translateY(1px);
+    }
+    
+    /* Loading animation */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    
+    .loading-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 3px solid rgba(192, 0, 0, 0.1);
+      border-top-color: var(--magnetar-red);
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* App card animation */
+    .app-card {
+      transition: all 0.3s ease;
+    }
+    
+    .app-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Bottom nav hover animation */
+    .nav-item {
+      transition: all 0.3s ease;
+    }
+    
+    .nav-item:hover {
+      transform: translateY(-5px);
+    }
+
+    /* Center button styles */
+    .center-button {
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      transform: translateY(-10px);
+      transition: all 0.3s ease;
+    }
+
+    .center-button:hover {
+      transform: translateY(-15px);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+    }
+  </style>
+  <script>
+    // Prevent zoom on double-tap
+    document.addEventListener('touchstart', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Prevent zoom on pinch
+    document.addEventListener('touchmove', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Prevent zoom on double-tap
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(event) {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, { passive: false });
+  </script>
+</head>
+
+<body class="bg-gray-100 flex flex-col mx-auto min-h-screen max-w-sm w-full">
+  <!-- Loading overlay -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <!-- Header -->
+  <header class="bg-white text-gray-800 p-4 text-lg font-semibold flex items-center justify-between sticky top-0 z-50 shadow-sm">
+    <div class="flex items-center">
+      <span class="material-icons text-gray-700 mr-2 cursor-pointer" id="backBtn">arrow_back</span>
+      <h1 class="text-lg font-semibold">Utility Apps</h1>
+    </div>
+    <div class="flex items-center space-x-6">
+      <div class="relative cursor-pointer" onclick="handleNotificationClick()">
+        <span class="material-icons text-2xl text-gray-700">notifications</span>
+        <span id="notificationBadge"
+            class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 hidden">0</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col items-center p-4 w-full overflow-y-auto pb-24 space-y-6">
+    <!-- Search Bar -->
+    <div class="w-full">
+      <div class="relative">
+        <input 
+          type="text" 
+          placeholder="Search utility apps..." 
+          class="w-full p-3 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500"
+        >
+        <span class="material-icons absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">search</span>
+      </div>
+    </div>
+
+    <!-- App List -->
+    <div class="w-full space-y-4">
+      <h2 class="text-lg font-bold">Media & Download Tools</h2>
+      
+      <!-- App 1 -->
+      <div class="bg-white rounded-lg shadow overflow-hidden app-card" onclick="window.location.href='app-details.html?id=1&name=YouTube%20to%20MP3%20Converter&icon=video_library'">
+        <div class="flex">
+          <div class="w-1/4 bg-gray-200 flex items-center justify-center p-2">
+            <span class="material-icons text-4xl text-red-600">video_library</span>
+          </div>
+          <div class="w-3/4 p-3">
+            <div class="flex justify-between">
+              <h3 class="font-medium text-gray-900">YouTube to MP3 Converter</h3>
+              <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Free</span>
+            </div>
+            <p class="text-sm text-gray-600 mt-1">Convert YouTube videos to MP3 audio files</p>
+            <div class="flex items-center mt-2">
+              <span class="material-icons text-yellow-500 text-xs">star</span>
+              <span class="text-xs text-gray-600 ml-1">4.5 (1,245)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- App 2 -->
+      <div class="bg-white rounded-lg shadow overflow-hidden app-card" onclick="window.location.href='app-details.html?id=2&name=Video%20Downloader%20Pro&icon=download'">
+        <div class="flex">
+          <div class="w-1/4 bg-gray-200 flex items-center justify-center p-2">
+            <span class="material-icons text-4xl text-blue-600">download</span>
+          </div>
+          <div class="w-3/4 p-3">
+            <div class="flex justify-between">
+              <h3 class="font-medium text-gray-900">Video Downloader Pro</h3>
+              <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">Premium</span>
+            </div>
+            <p class="text-sm text-gray-600 mt-1">Download videos from multiple platforms</p>
+            <div class="flex items-center mt-2">
+              <span class="material-icons text-yellow-500 text-xs">star</span>
+              <span class="text-xs text-gray-600 ml-1">4.7 (982)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- App 3 -->
+      <div class="bg-white rounded-lg shadow overflow-hidden app-card" onclick="window.location.href='app-details.html?id=3&name=Audio%20Editor%20Suite&icon=music_note'">
+        <div class="flex">
+          <div class="w-1/4 bg-gray-200 flex items-center justify-center p-2">
+            <span class="material-icons text-4xl text-purple-600">music_note</span>
+          </div>
+          <div class="w-3/4 p-3">
+            <div class="flex justify-between">
+              <h3 class="font-medium text-gray-900">Audio Editor Suite</h3>
+              <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Free</span>
+            </div>
+            <p class="text-sm text-gray-600 mt-1">Edit and enhance audio files</p>
+            <div class="flex items-center mt-2">
+              <span class="material-icons text-yellow-500 text-xs">star</span>
+              <span class="text-xs text-gray-600 ml-1">4.3 (756)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- App 4 -->
+      <div class="bg-white rounded-lg shadow overflow-hidden app-card" onclick="window.location.href='app-details.html?id=4&name=Video%20Compressor&icon=compress'">
+        <div class="flex">
+          <div class="w-1/4 bg-gray-200 flex items-center justify-center p-2">
+            <span class="material-icons text-4xl text-green-600">compress</span>
+          </div>
+          <div class="w-3/4 p-3">
+            <div class="flex justify-between">
+              <h3 class="font-medium text-gray-900">Video Compressor</h3>
+              <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Free</span>
+            </div>
+            <p class="text-sm text-gray-600 mt-1">Compress videos without losing quality</p>
+            <div class="flex items-center mt-2">
+              <span class="material-icons text-yellow-500 text-xs">star</span>
+              <span class="text-xs text-gray-600 ml-1">4.2 (543)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- App 5 -->
+      <div class="bg-white rounded-lg shadow overflow-hidden app-card" onclick="window.location.href='app-details.html?id=5&name=Media%20Converter&icon=swap_horiz'">
+        <div class="flex">
+          <div class="w-1/4 bg-gray-200 flex items-center justify-center p-2">
+            <span class="material-icons text-4xl text-orange-600">swap_horiz</span>
+          </div>
+          <div class="w-3/4 p-3">
+            <div class="flex justify-between">
+              <h3 class="font-medium text-gray-900">Media Converter</h3>
+              <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">Premium</span>
+            </div>
+            <p class="text-sm text-gray-600 mt-1">Convert media files between formats</p>
+            <div class="flex items-center mt-2">
+              <span class="material-icons text-yellow-500 text-xs">star</span>
+              <span class="text-xs text-gray-600 ml-1">4.6 (821)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <h2 class="text-lg font-bold mt-6">Social Media Tools</h2>
+      
+      <!-- App 6 -->
+      <div class="bg-white rounded-lg shadow overflow-hidden app-card" onclick="window.location.href='app-details.html?id=6&name=Instagram%20Downloader&icon=photo_camera'">
+        <div class="flex">
+          <div class="w-1/4 bg-gray-200 flex items-center justify-center p-2">
+            <span class="material-icons text-4xl text-pink-600">photo_camera</span>
+          </div>
+          <div class="w-3/4 p-3">
+            <div class="flex justify-between">
+              <h3 class="font-medium text-gray-900">Instagram Downloader</h3>
+              <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Free</span>
+            </div>
+            <p class="text-sm text-gray-600 mt-1">Save photos and videos from Instagram</p>
+            <div class="flex items-center mt-2">
+              <span class="material-icons text-yellow-500 text-xs">star</span>
+              <span class="text-xs text-gray-600 ml-1">4.4 (892)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- App 7 -->
+      <div class="bg-white rounded-lg shadow overflow-hidden app-card" onclick="window.location.href='app-details.html?id=7&name=TikTok%20Downloader&icon=movie'">
+        <div class="flex">
+          <div class="w-1/4 bg-gray-200 flex items-center justify-center p-2">
+            <span class="material-icons text-4xl text-blue-600">movie</span>
+          </div>
+          <div class="w-3/4 p-3">
+            <div class="flex justify-between">
+              <h3 class="font-medium text-gray-900">TikTok Downloader</h3>
+              <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Free</span>
+            </div>
+            <p class="text-sm text-gray-600 mt-1">Download TikTok videos without watermark</p>
+            <div class="flex items-center mt-2">
+              <span class="material-icons text-yellow-500 text-xs">star</span>
+              <span class="text-xs text-gray-600 ml-1">4.8 (1,567)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- App 8 -->
+      <div class="bg-white rounded-lg shadow overflow-hidden app-card" onclick="window.location.href='app-details.html?id=8&name=Twitter%20Video%20Saver&icon=save_alt'">
+        <div class="flex">
+          <div class="w-1/4 bg-gray-200 flex items-center justify-center p-2">
+            <span class="material-icons text-4xl text-cyan-600">save_alt</span>
+          </div>
+          <div class="w-3/4 p-3">
+            <div class="flex justify-between">
+              <h3 class="font-medium text-gray-900">Twitter Video Saver</h3>
+              <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">Premium</span>
+            </div>
+            <p class="text-sm text-gray-600 mt-1">Save videos from Twitter in high quality</p>
+            <div class="flex items-center mt-2">
+              <span class="material-icons text-yellow-500 text-xs">star</span>
+              <span class="text-xs text-gray-600 ml-1">4.5 (723)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <h2 class="text-lg font-bold mt-6">File Conversion Tools</h2>
+      
+      <!-- App 9 -->
+      <div class="bg-white rounded-lg shadow overflow-hidden app-card" onclick="window.location.href='app-details.html?id=9&name=PDF%20Converter&icon=picture_as_pdf'">
+        <div class="flex">
+          <div class="w-1/4 bg-gray-200 flex items-center justify-center p-2">
+            <span class="material-icons text-4xl text-red-600">picture_as_pdf</span>
+          </div>
+          <div class="w-3/4 p-3">
+            <div class="flex justify-between">
+              <h3 class="font-medium text-gray-900">PDF Converter</h3>
+              <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">Premium</span>
+            </div>
+            <p class="text-sm text-gray-600 mt-1">Convert documents to and from PDF format</p>
+            <div class="flex items-center mt-2">
+              <span class="material-icons text-yellow-500 text-xs">star</span>
+              <span class="text-xs text-gray-600 ml-1">4.7 (1,032)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- App 10 -->
+      <div class="bg-white rounded-lg shadow overflow-hidden app-card" onclick="window.location.href='app-details.html?id=10&name=Image%20Converter&icon=image'">
+        <div class="flex">
+          <div class="w-1/4 bg-gray-200 flex items-center justify-center p-2">
+            <span class="material-icons text-4xl text-green-600">image</span>
+          </div>
+          <div class="w-3/4 p-3">
+            <div class="flex justify-between">
+              <h3 class="font-medium text-gray-900">Image Converter</h3>
+              <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Free</span>
+            </div>
+            <p class="text-sm text-gray-600 mt-1">Convert images between different formats</p>
+            <div class="flex items-center mt-2">
+              <span class="material-icons text-yellow-500 text-xs">star</span>
+              <span class="text-xs text-gray-600 ml-1">4.3 (876)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- App 11 -->
+      <div class="bg-white rounded-lg shadow overflow-hidden app-card" onclick="window.location.href='app-details.html?id=11&name=Audio%20Converter&icon=audiotrack'">
+        <div class="flex">
+          <div class="w-1/4 bg-gray-200 flex items-center justify-center p-2">
+            <span class="material-icons text-4xl text-purple-600">audiotrack</span>
+          </div>
+          <div class="w-3/4 p-3">
+            <div class="flex justify-between">
+              <h3 class="font-medium text-gray-900">Audio Converter</h3>
+              <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Free</span>
+            </div>
+            <p class="text-sm text-gray-600 mt-1">Convert audio files between formats</p>
+            <div class="flex items-center mt-2">
+              <span class="material-icons text-yellow-500 text-xs">star</span>
+              <span class="text-xs text-gray-600 ml-1">4.4 (654)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <h2 class="text-lg font-bold mt-6">Productivity Tools</h2>
+      
+      <!-- App 12 -->
+      <div class="bg-white rounded-lg shadow overflow-hidden app-card" onclick="window.location.href='app-details.html?id=12&name=File%20Compressor&icon=folder_zip'">
+        <div class="flex">
+          <div class="w-1/4 bg-gray-200 flex items-center justify-center p-2">
+            <span class="material-icons text-4xl text-yellow-600">folder_zip</span>
+          </div>
+          <div class="w-3/4 p-3">
+            <div class="flex justify-between">
+              <h3 class="font-medium text-gray-900">File Compressor</h3>
+              <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Free</span>
+            </div>
+            <p class="text-sm text-gray-600 mt-1">Compress files to save storage space</p>
+            <div class="flex items-center mt-2">
+              <span class="material-icons text-yellow-500 text-xs">star</span>
+              <span class="text-xs text-gray-600 ml-1">4.2 (543)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- App 13 -->
+      <div class="bg-white rounded-lg shadow overflow-hidden app-card" onclick="window.location.href='app-details.html?id=13&name=QR%20Code%20Generator&icon=qr_code'">
+        <div class="flex">
+          <div class="w-1/4 bg-gray-200 flex items-center justify-center p-2">
+            <span class="material-icons text-4xl text-blue-600">qr_code</span>
+          </div>
+          <div class="w-3/4 p-3">
+            <div class="flex justify-between">
+              <h3 class="font-medium text-gray-900">QR Code Generator</h3>
+              <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Free</span>
+            </div>
+            <p class="text-sm text-gray-600 mt-1">Create QR codes for links and text</p>
+            <div class="flex items-center mt-2">
+              <span class="material-icons text-yellow-500 text-xs">star</span>
+              <span class="text-xs text-gray-600 ml-1">4.6 (789)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- App 14 -->
+      <div class="bg-white rounded-lg shadow overflow-hidden app-card" onclick="window.location.href='app-details.html?id=14&name=Text%20Extractor&icon=text_format'">
+        <div class="flex">
+          <div class="w-1/4 bg-gray-200 flex items-center justify-center p-2">
+            <span class="material-icons text-4xl text-green-600">text_format</span>
+          </div>
+          <div class="w-3/4 p-3">
+            <div class="flex justify-between">
+              <h3 class="font-medium text-gray-900">Text Extractor</h3>
+              <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">Premium</span>
+            </div>
+            <p class="text-sm text-gray-600 mt-1">Extract text from images and PDFs</p>
+            <div class="flex items-center mt-2">
+              <span class="material-icons text-yellow-500 text-xs">star</span>
+              <span class="text-xs text-gray-600 ml-1">4.5 (678)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <h2 class="text-lg font-bold mt-6">Streaming Tools</h2>
+      
+      <!-- App 15 -->
+      <div class="bg-white rounded-lg shadow overflow-hidden app-card" onclick="window.location.href='app-details.html?id=15&name=Podcast%20Downloader&icon=podcasts'">
+        <div class="flex">
+          <div class="w-1/4 bg-gray-200 flex items-center justify-center p-2">
+            <span class="material-icons text-4xl text-red-600">podcasts</span>
+          </div>
+          <div class="w-3/4 p-3">
+            <div class="flex justify-between">
+              <h3 class="font-medium text-gray-900">Podcast Downloader</h3>
+              <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Free</span>
+            </div>
+            <p class="text-sm text-gray-600 mt-1">Download podcasts for offline listening</p>
+            <div class="flex items-center mt-2">
+              <span class="material-icons text-yellow-500 text-xs">star</span>
+              <span class="text-xs text-gray-600 ml-1">4.4 (632)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- App 16 -->
+      <div class="bg-white rounded-lg shadow overflow-hidden app-card" onclick="window.location.href='app-details.html?id=16&name=Music%20Downloader&icon=library_music'">
+        <div class="flex">
+          <div class="w-1/4 bg-gray-200 flex items-center justify-center p-2">
+            <span class="material-icons text-4xl text-purple-600">library_music</span>
+          </div>
+          <div class="w-3/4 p-3">
+            <div class="flex justify-between">
+              <h3 class="font-medium text-gray-900">Music Downloader</h3>
+              <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Free</span>
+            </div>
+            <p class="text-sm text-gray-600 mt-1">Download music from various sources</p>
+            <div class="flex items-center mt-2">
+              <span class="material-icons text-yellow-500 text-xs">star</span>
+              <span class="text-xs text-gray-600 ml-1">4.1 (498)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- App 17 -->
+      <div class="bg-white rounded-lg shadow overflow-hidden app-card" onclick="window.location.href='app-details.html?id=17&name=Screen%20Recorder&icon=videocam'">
+        <div class="flex">
+          <div class="w-1/4 bg-gray-200 flex items-center justify-center p-2">
+            <span class="material-icons text-4xl text-blue-600">videocam</span>
+          </div>
+          <div class="w-3/4 p-3">
+            <div class="flex justify-between">
+              <h3 class="font-medium text-gray-900">Screen Recorder</h3>
+              <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">Premium</span>
+            </div>
+            <p class="text-sm text-gray-600 mt-1">Record your screen with audio</p>
+            <div class="flex items-center mt-2">
+              <span class="material-icons text-yellow-500 text-xs">star</span>
+              <span class="text-xs text-gray-600 ml-1">4.8 (1,102)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <h2 class="text-lg font-bold mt-6">Other Utilities</h2>
+      
+      <!-- App 18 -->
+      <div class="bg-white rounded-lg shadow overflow-hidden app-card" onclick="window.location.href='app-details.html?id=18&name=URL%20Shortener&icon=link'">
+        <div class="flex">
+          <div class="w-1/4 bg-gray-200 flex items-center justify-center p-2">
+            <span class="material-icons text-4xl text-cyan-600">link</span>
+          </div>
+          <div class="w-3/4 p-3">
+            <div class="flex justify-between">
+              <h3 class="font-medium text-gray-900">URL Shortener</h3>
+              <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Free</span>
+            </div>
+            <p class="text-sm text-gray-600 mt-1">Create short links for easy sharing</p>
+            <div class="flex items-center mt-2">
+              <span class="material-icons text-yellow-500 text-xs">star</span>
+              <span class="text-xs text-gray-600 ml-1">4.3 (521)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- App 19 -->
+      <div class="bg-white rounded-lg shadow overflow-hidden app-card" onclick="window.location.href='app-details.html?id=19&name=Password%20Generator&icon=password'">
+        <div class="flex">
+          <div class="w-1/4 bg-gray-200 flex items-center justify-center p-2">
+            <span class="material-icons text-4xl text-green-600">password</span>
+          </div>
+          <div class="w-3/4 p-3">
+            <div class="flex justify-between">
+              <h3 class="font-medium text-gray-900">Password Generator</h3>
+              <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Free</span>
+            </div>
+            <p class="text-sm text-gray-600 mt-1">Generate strong, secure passwords</p>
+            <div class="flex items-center mt-2">
+              <span class="material-icons text-yellow-500 text-xs">star</span>
+              <span class="text-xs text-gray-600 ml-1">4.5 (687)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- App 20 -->
+      <div class="bg-white rounded-lg shadow overflow-hidden app-card" onclick="window.location.href='app-details.html?id=20&name=File%20Recovery&icon=restore'">
+        <div class="flex">
+          <div class="w-1/4 bg-gray-200 flex items-center justify-center p-2">
+            <span class="material-icons text-4xl text-orange-600">restore</span>
+          </div>
+          <div class="w-3/4 p-3">
+            <div class="flex justify-between">
+              <h3 class="font-medium text-gray-900">File Recovery</h3>
+              <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">Premium</span>
+            </div>
+            <p class="text-sm text-gray-600 mt-1">Recover deleted files from your device</p>
+            <div class="flex items-center mt-2">
+              <span class="material-icons text-yellow-500 text-xs">star</span>
+              <span class="text-xs text-gray-600 ml-1">4.7 (912)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Bottom Nav -->
+  <div class="bg-white border-t border-gray-300 w-full max-w-sm flex justify-around items-center py-2 fixed bottom-0 left-1/2 transform -translate-x-1/2">
+    <div class="nav-item cursor-pointer" onclick="window.location.href='social.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">people</span>
+    </div>
+    <div class="nav-item cursor-pointer" onclick="window.location.href='wallet.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">account_balance_wallet</span>
+    </div>
+    <div class="center-button cursor-pointer" onclick="window.location.href='index.html'">
+      <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center shadow-md">
+        <div class="w-8 h-8 bg-contain bg-center bg-no-repeat"
+            style="background-image: url('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20250127_191600_0000-6AwFlDvh6mQeKcJJwH3Jlyef5Qpeic.png')"></div>
+      </div>
+    </div>
+    <div class="nav-item cursor-pointer" onclick="window.location.href='academy.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">school</span>
+    </div>
+    <div class="nav-item cursor-pointer" onclick="window.location.href='settings.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">settings</span>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js";
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtNedkJo6ikNneZZdrheiWbE3Dn2B8kwQ",
+      authDomain: "ces-project-f8b4e.firebaseapp.com",
+      databaseURL: "https://ces-project-f8b4e-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "ces-project-f8b4e",
+      storageBucket: "ces-project-f8b4e.firebasestorage.app",
+      messagingSenderId: "580767851656",
+      appId: "1:580767851656:web:2c852e7edb81a6decdeb3d",
+      measurementId: "G-K73DSMWBTP"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    
+    // DOM elements
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const backBtn = document.getElementById('backBtn');
+    const notificationBadge = document.getElementById('notificationBadge');
+    
+    // Show loading initially
+    loadingOverlay.classList.add('active');
+    
+    // Check authentication state
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is signed in
+        console.log("User is signed in:", user.uid);
+        // Hide loading
+        loadingOverlay.classList.remove('active');
+      } else {
+        // User is signed out, redirect to login
+        window.location.href = 'email-login.html';
+      }
+    });
+    
+    // Handle back button
+    backBtn.addEventListener('click', () => {
+      window.history.back();
+    });
+    
+    // Function to update notification badge count
+    function updateNotificationBadge(count) {
+      if (count > 0) {
+        notificationBadge.textContent = count;
+        notificationBadge.classList.remove('hidden');
+      } else {
+        notificationBadge.classList.add('hidden');
+      }
+    }
+    
+    // Handle notification icon click
+    function handleNotificationClick() {
+      window.location.href = 'notifications.html';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Magnetar - Privacy Policy</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#C00000">
+  <meta name="description" content="Magnetar - Privacy Policy">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Magnetar">
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --magnetar-red: #C00000;
+      --text-dark: #1A1A1A;
+    }
+    
+    body {
+      font-family: 'Open Sans', sans-serif;
+      color: var(--text-dark);
+      background-color: #f5f5f5;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    h1, h2, h3, h4, h5, h6, .heading {
+      font-family: 'Roboto', sans-serif;
+    }
+    
+    .btn-primary {
+      background-color: var(--magnetar-red);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    .btn-primary:hover, .btn-primary:active {
+      background-color: #A00000;
+      transform: translateY(-1px);
+    }
+    
+    .btn-primary:active {
+      transform: translateY(1px);
+    }
+    
+    /* Loading animation */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    
+    .loading-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 3px solid rgba(192, 0, 0, 0.1);
+      border-top-color: var(--magnetar-red);
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Bottom nav hover animation */
+    .nav-item {
+      transition: all 0.3s ease;
+    }
+    
+    .nav-item:hover {
+      transform: translateY(-5px);
+    }
+
+    /* Center button styles */
+    .center-button {
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      transform: translateY(-10px);
+      transition: all 0.3s ease;
+    }
+
+    .center-button:hover {
+      transform: translateY(-15px);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+    }
+  </style>
+  <script>
+    // Prevent zoom on double-tap
+    document.addEventListener('touchstart', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Prevent zoom on pinch
+    document.addEventListener('touchmove', function(event) {
+      if (event.touches.length > 1) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Prevent zoom on double-tap
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(event) {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, { passive: false });
+  </script>
+</head>
+
+<body class="bg-gray-100 flex flex-col mx-auto min-h-screen max-w-sm w-full">
+  <!-- Loading overlay -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <!-- Header -->
+  <header class="bg-white text-gray-800 p-4 text-lg font-semibold flex items-center justify-between sticky top-0 z-50 shadow-sm">
+    <!-- Left: User Avatar -->
+    <a href="profile.html" class="flex items-center">
+      <img src="https://i.pravatar.cc/300?img=8" alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-gray-300" />
+    </a>
+
+    <!-- Right: Notifications and Messages -->
+    <div class="flex items-center space-x-6">
+      <div class="relative cursor-pointer" onclick="window.location.href='notifications.html'">
+        <span class="material-icons text-2xl text-gray-700">notifications</span>
+        <span id="notificationBadge"
+            class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 hidden">0</span>
+      </div>
+      <a href="message.html">
+        <span class="material-icons text-2xl cursor-pointer text-gray-700">message</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col items-center p-4 w-full overflow-y-auto pb-24">
+    <div class="w-full max-w-md bg-white rounded-lg shadow-md p-6">
+      <div class="mb-6">
+        <h2 class="text-xl font-bold mb-4">Privacy Policy</h2>
+        <p class="text-gray-600 text-sm mb-2">Last updated: May 15, 2023</p>
+      </div>
+      
+      <div class="space-y-6 text-gray-700 text-sm">
+        <div>
+          <h3 class="font-bold mb-2">1. Introduction</h3>
+          <p>Magnetar ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our mobile application and website (collectively, the "Service").</p>
+          <p class="mt-2">Please read this Privacy Policy carefully. If you do not agree with the terms of this Privacy Policy, please do not access the Service.</p>
+        </div>
+        
+        <div>
+          <h3 class="font-bold mb-2">2. Information We Collect</h3>
+          <p>We may collect information about you in various ways. The information we may collect via the Service includes:</p>
+          
+          <h4 class="font-semibold mt-3">2.1 Personal Data</h4>
+          <p>Personally identifiable information, such as your name, email address, telephone number, and demographic information that you voluntarily give to us when you register with the Service or when you choose to participate in various activities related to the Service. You are under no obligation to provide us with personal information of any kind, however your refusal to do so may prevent you from using certain features of the Service.</p>
+          
+          <h4 class="font-semibold mt-3">2.2 Derivative Data</h4>
+          <p>Information our servers automatically collect when you access the Service, such as your IP address, browser type, operating system, access times, and the pages you have viewed directly before and after accessing the Service.</p>
+          
+          <h4 class="font-semibold mt-3">2.3 Financial Data</h4>
+          <p>Financial information, such as data related to your payment method (e.g., valid credit card number, card brand, expiration date) that we may collect when you purchase, order, return, exchange, or request information about our services from the Service.</p>
+          
+          <h4 class="font-semibold mt-3">2.4 Mobile Device Data</h4>
+          <p>Device information, such as your mobile device ID, model, and manufacturer, and information about the location of your device, if you access the Service from a mobile device.</p>
+        </div>
+        
+        <div>
+          <h3 class="font-bold mb-2">3. Use of Your Information</h3>
+          <p>Having accurate information about you permits us to provide you with a smooth, efficient, and customized experience. Specifically, we may use information collected about you via the Service to:</p>
+          <ul class="list-disc pl-5 mt-2 space-y-1">
+            <li>Create and manage your account.</li>
+            <li>Process your transactions.</li>
+            <li>Send you email newsletters, if you have opted in.</li>
+            <li>Fulfill and manage purchases, orders, payments, and other transactions related to the Service.</li>
+            <li>Increase the efficiency and operation of the Service.</li>
+            <li>Monitor and analyze usage and trends to improve your experience with the Service.</li>
+            <li>Notify you of updates to the Service.</li>
+            <li>Resolve disputes and troubleshoot problems.</li>
+            <li>Prevent fraudulent transactions, monitor against theft, and protect against criminal activity.</li>
+          </ul>
+        </div>
+        
+        <div>
+          <h3 class="font-bold mb-2">4. Disclosure of Your Information</h3>
+          <p>We may share information we have collected about you in certain situations. Your information may be disclosed as follows:</p>
+          
+          <h4 class="font-semibold mt-3">4.1 By Law or to Protect Rights</h4>
+          <p>If we believe the release of information about you is necessary to respond to legal process, to investigate or remedy potential violations of our policies, or to protect the rights, property, and safety of others, we may share your information as permitted or required by any applicable law, rule, or regulation.</p>
+          
+          <h4 class="font-semibold mt-3">4.2 Third-Party Service Providers</h4>
+          <p>We may share your information with third parties that perform services for us or on our behalf, including payment processing, data analysis, email delivery, hosting services, customer service, and marketing assistance.</p>
+          
+          <h4 class="font-semibold mt-3">4.3 Marketing Communications</h4>
+          <p>With your consent, or with an opportunity for you to withdraw consent, we may share your information with third parties for marketing purposes.</p>
+        </div>
+        
+        <div>
+          <h3 class="font-bold mb-2">5. Security of Your Information</h3>
+          <p>We use administrative, technical, and physical security measures to help protect your personal information. While we have taken reasonable steps to secure the personal information you provide to us, please be aware that despite our efforts, no security measures are perfect or impenetrable, and no method of data transmission can be guaranteed against any interception or other type of misuse.</p>
+        </div>
+        
+        <div>
+          <h3 class="font-bold mb-2">6. Contact Us</h3>
+          <p>If you have questions or comments about this Privacy Policy, please contact us at:</p>
+          <p class="mt-2">Magnetar<br>
+          123 Privacy Street<br>
+          Data City, DC 10101<br>
+          privacy@magnetar.com</p>
+        </div>
+      </div>
+      
+      <div class="mt-6">
+        <button class="w-full bg-red-600 text-white p-3 rounded-lg font-medium">
+          I Understand
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Bottom Nav -->
+  <div class="bg-white w-full max-w-sm flex justify-around items-center py-2 fixed bottom-0 left-1/2 transform -translate-x-1/2 shadow-lg">
+    <div class="nav-item cursor-pointer" onclick="window.location.href='social.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">people</span>
+    </div>
+    <div class="nav-item cursor-pointer" onclick="window.location.href='wallet.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">account_balance_wallet</span>
+    </div>
+    <div class="center-button cursor-pointer shadow-xl" onclick="window.location.href='index.html'">
+      <div class="w-12 h-12 rounded-full bg-red-600 flex items-center justify-center">
+        <div class="w-8 h-8 bg-contain bg-center bg-no-repeat rounded-full"
+            style="background-image: url('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20250127_191600_0000-6AwFlDvh6mQeKcJJwH3Jlyef5Qpeic.png')"></div>
+      </div>
+    </div>
+    <div class="nav-item cursor-pointer" onclick="window.location.href='academy.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">school</span>
+    </div>
+    <div class="nav-item cursor-pointer" onclick="window.location.href='settings.html'">
+      <span class="material-icons text-gray-600 text-xl" style="font-size: 1.5em">settings</span>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js";
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtNedkJo6ikNneZZdrheiWbE3Dn2B8kwQ",
+      authDomain: "ces-project-f8b4e.firebaseapp.com",
+      databaseURL: "https://ces-project-f8b4e-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "ces-project-f8b4e",
+      storageBucket: "ces-project-f8b4e.firebasestorage.app",
+      messagingSenderId: "580767851656",
+      appId: "1:580767851656:web:2c852e7edb81a6decdeb3d",
+      measurementId: "G-K73DSMWBTP"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    
+    // DOM elements
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const notificationBadge = document.getElementById('notificationBadge');
+    
+    // Check authentication state
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        console.log('User is authenticated:', user.uid);
+        // Hide loading
+        loadingOverlay.classList.remove('active');
+      } else {
+        // Redirect to login if not authenticated
+        window.location.href = 'email-login.html';
+      }
+    });
+  </script>
+</body>
+</html>

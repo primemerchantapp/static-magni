@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Magnetar - Onboarding</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#C00000">
+    <meta name="description" content="Magnetar - Your Next-Level Mobile App">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Magnetar">
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    <style>
+      :root {
+        --magnetar-red: #C00000;
+        --text-dark: #1A1A1A;
+      }
+      
+      body {
+        font-family: 'Open Sans', sans-serif;
+        color: var(--text-dark);
+        background-color: black;
+        overflow: hidden;
+      }
+      
+      h1, h2, h3, h4, h5, h6, .heading {
+        font-family: 'Roboto', sans-serif;
+      }
+      
+      .btn-primary {
+        background-color: var(--magnetar-red);
+      }
+      
+      .btn-primary:hover {
+        background-color: #A00000;
+      }
+      
+      .slide {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        transition: opacity 0.5s ease-in-out;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        align-items: center;
+        padding: 20px;
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+      }
+      
+      .slide.active {
+        opacity: 1;
+      }
+      
+      .slide-content {
+        text-align: center;
+        max-width: 300px;
+        margin-bottom: 100px;
+        background-color: rgba(0, 0, 0, 0.6);
+        padding: 20px;
+        border-radius: 10px;
+        backdrop-filter: blur(5px);
+      }
+      
+      .slide-indicator {
+        position: absolute;
+        bottom: 100px;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+      }
+      
+      .indicator {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: rgba(255, 255, 255, 0.5);
+      }
+      
+      .indicator.active {
+        background-color: white;
+        width: 24px;
+        border-radius: 4px;
+      }
+      
+      .action-button {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        right: 20px;
+        z-index: 100;
+      }
+      
+      .slide-image {
+        width: 250px;
+        height: 250px;
+        object-fit: cover;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+      }
+    </style>
+    <script>
+      // Prevent zoom on double-tap
+      document.addEventListener('touchstart', function(event) {
+        if (event.touches.length > 1) {
+          event.preventDefault();
+        }
+      }, { passive: false });
+      
+      // Prevent zoom on pinch
+      document.addEventListener('touchmove', function(event) {
+        if (event.touches.length > 1) {
+          event.preventDefault();
+        }
+      }, { passive: false });
+      
+      // Prevent zoom on double-tap
+      let lastTouchEnd = 0;
+      document.addEventListener('touchend', function(event) {
+        const now = Date.now();
+        if (now - lastTouchEnd <= 300) {
+          event.preventDefault();
+        }
+        lastTouchEnd = now;
+      }, { passive: false });
+    </script>
+  </head>
+  <body class="bg-black min-h-screen text-white">
+    <!-- Full-screen slider -->
+    <div id="slider" class="relative w-full h-screen">
+      <!-- Slide 1 -->
+      <div class="slide active" style="background-image: url('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/file-QZ2tP2W84iPZsQNhhrvu6T-wIwRjKViC2SOJwgkbTpIU7qRUFduwi.webp')">
+        <div class="slide-content">
+          <h2 class="text-2xl font-bold mb-2">Welcome to Magnetar</h2>
+          <p class="text-gray-400">Your path to financial freedom starts here</p>
+        </div>
+      </div>
+      
+      <!-- Slide 2 -->
+      <div class="slide" style="background-image: url('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/file-4Z1y2waBxsefmG8Ft3adw8-HzW0V2MOt7iT6SR9E3qTODYZstWGeM.webp')">
+        <div class="slide-content">
+          <h2 class="text-2xl font-bold mb-2">Grow Your Network</h2>
+          <p class="text-gray-400">Build and lead successful teams</p>
+        </div>
+      </div>
+      
+      <!-- Slide 3 -->
+      <div class="slide" style="background-image: url('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot_20250308_104408_ChatGPT.jpg-A')">
+        <div class="slide-content">
+          <h2 class="text-2xl font-bold mb-2">Launch Your Success</h2>
+          <p class="text-gray-400">Automate and monetize with AI tools</p>
+        </div>
+      </div>
+      
+      <!-- Slide indicators -->
+      <div class="slide-indicator">
+        <div class="indicator active"></div>
+        <div class="indicator"></div>
+        <div class="indicator"></div>
+      </div>
+    </div>
+    
+    <!-- Get Started button -->
+    <div class="action-button">
+      <a href="email-signup.html" class="block w-full py-4 text-center text-white font-bold rounded-full btn-primary text-lg">
+        Get Started
+      </a>
+      <p class="text-center text-white mt-4">
+        Already have an account? 
+        <a href="email-login.html" class="underline">Sign In</a>
+      </p>
+    </div>
+    
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const slides = document.querySelectorAll('.slide');
+        const indicators = document.querySelectorAll('.indicator');
+        let currentSlide = 0;
+        
+        function showSlide(index) {
+          // Hide all slides
+          slides.forEach(slide => {
+            slide.classList.remove('active');
+          });
+          
+          // Deactivate all indicators
+          indicators.forEach(indicator => {
+            indicator.classList.remove('active');
+          });
+          
+          // Show current slide and activate indicator
+          slides[index].classList.add('active');
+          indicators[index].classList.add('active');
+        }
+        
+        function nextSlide() {
+          currentSlide = (currentSlide + 1) % slides.length;
+          showSlide(currentSlide);
+        }
+        
+        // Set up automatic slide transition
+        setInterval(nextSlide, 5000);
+        
+        // Set up indicator clicks
+        indicators.forEach((indicator, index) => {
+          indicator.addEventListener('click', () => {
+            currentSlide = index;
+            showSlide(currentSlide);
+          });
+        });
+        
+        // Set up swipe detection
+        let touchStartX = 0;
+        let touchEndX = 0;
+        
+        document.addEventListener('touchstart', e => {
+          touchStartX = e.changedTouches[0].screenX;
+        });
+        
+        document.addEventListener('touchend', e => {
+          touchEndX = e.changedTouches[0].screenX;
+          handleSwipe();
+        });
+        
+        function handleSwipe() {
+          const swipeThreshold = 50;
+          if (touchEndX < touchStartX - swipeThreshold) {
+            // Swipe left - next slide
+            currentSlide = (currentSlide + 1) % slides.length;
+            showSlide(currentSlide);
+          } else if (touchEndX > touchStartX + swipeThreshold) {
+            // Swipe right - previous slide
+            currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+            showSlide(currentSlide);
+          }
+        }
+      });
+    </script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
+            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+          }, function(err) {
+            console.log('ServiceWorker registration failed: ', err);
+          });
+        });
+      }
+    </script>
+  </body>
+</html>
